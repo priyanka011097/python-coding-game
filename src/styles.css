@@ -196,12 +196,20 @@ pre.code {
 .blank {
   font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 13.5px;
   max-width: 100%;
-  background: var(--surface); color: var(--ink);
+  /* Transparent, not --surface: the blank sits inside the code block, so
+     any fill of its own draws a box around it and makes it read as a
+     form field rather than a gap in the line. The verdict states below
+     do fill, because there the tint IS the message. */
+  background: transparent; color: var(--ink);
   border: none; border-bottom: 2px dashed var(--accent);
   border-radius: 3px 3px 0 0; padding: 1px 6px;
-  outline-offset: 2px;
 }
-.blank:focus { outline: 2px solid var(--accent); border-bottom-color: transparent; }
+/* No box on focus. The underline is the whole indicator: dashed while
+   the blank is empty and waiting, solid and brighter once you are
+   typing in it. That keeps a visible focus cue — the input is
+   autofocused, so with nothing at all you cannot tell where you are —
+   without drawing a field around it. */
+.blank:focus { outline: none; border-bottom-style: solid; border-bottom-color: var(--accent-ink); }
 .blank--correct { border-bottom: 2px solid var(--pass); background: var(--pass-soft); }
 .blank--wrong { border-bottom: 2px solid var(--fail); background: var(--fail-soft); }
 .blank--shown { border-bottom: 2px solid var(--accent); background: var(--accent-soft); }
@@ -305,7 +313,7 @@ pre.code {
 
 .saved { font-size: 11.5px; color: var(--ink-3); margin-top: 14px; }
 
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible:not(.blank) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
