@@ -1,39 +1,23 @@
+/* One palette, and it is black. There is no light theme: the page is
+   pure #000 and every surface is a neutral near-black, so nothing carries
+   the blue tint the old dark theme had. Borders do the separating work
+   that a lighter surface would otherwise do. */
 :root {
-  --paper:#EDF0F5; --surface:#FFFFFF; --surface-2:#E3E8F0; --code-bg:#F5F7FA;
-  --ink:#0F141C; --ink-2:#515F73; --ink-3:#7C8AA0;
-  --line:#D2DAE5; --line-2:#BCC7D6;
-  --accent:#2F4FCC; --accent-soft:#DEE5FB; --accent-ink:#22399A;
-  --on-accent:#FFFFFF;
-  --pass:#0F7355; --pass-soft:#D5EEE5; --pass-line:#8FCFB8;
-  --fail:#BB3527; --fail-soft:#FADFDB; --fail-line:#EDA79D;
-  --warn:#96620A; --warn-soft:#F7E7C9;
-  --shadow: 0 1px 2px rgba(15,20,28,.06), 0 8px 24px -12px rgba(15,20,28,.18);
-}
+  color-scheme: dark;
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper:#000000; --surface:#0D1219; --surface-2:#161D27; --code-bg:#080C11;
-    --ink:#E7ECF4; --ink-2:#9AA8BC; --ink-3:#71809A;
-    --line:#252F3C; --line-2:#33404F;
-    --accent:#8AA4FF; --accent-soft:#1A2440; --accent-ink:#B3C4FF;
-    --on-accent:#0B0F15;
-    --pass:#4FCFA0; --pass-soft:#0F2C25; --pass-line:#1F5546;
-    --fail:#FF8E7C; --fail-soft:#331817; --fail-line:#5E2C27;
-    --warn:#E3AC5B; --warn-soft:#31240F;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
-  }
-}
+  --paper:#000000; --surface:#0A0A0A; --surface-2:#161616; --code-bg:#000000;
+  --ink:#F2F3F5; --ink-2:#A7ABB2; --ink-3:#787D85;
+  --line:#242628; --line-2:#3B3E43;
+  --accent:#8AA4FF; --accent-soft:#151A2B; --accent-ink:#B3C4FF;
+  --on-accent:#000000;
+  --pass:#4FCFA0; --pass-soft:#07211A; --pass-line:#1F5546;
+  --fail:#FF8E7C; --fail-soft:#25100D; --fail-line:#5E2C27;
+  --warn:#E3AC5B; --warn-soft:#241905;
+  --shadow: 0 1px 2px rgba(0,0,0,.6), 0 10px 30px -14px rgba(0,0,0,.9);
 
-:root[data-theme="dark"] {
-  --paper:#000000; --surface:#0D1219; --surface-2:#161D27; --code-bg:#080C11;
-  --ink:#E7ECF4; --ink-2:#9AA8BC; --ink-3:#71809A;
-  --line:#252F3C; --line-2:#33404F;
-  --accent:#8AA4FF; --accent-soft:#1A2440; --accent-ink:#B3C4FF;
-  --on-accent:#0B0F15;
-  --pass:#4FCFA0; --pass-soft:#0F2C25; --pass-line:#1F5546;
-  --fail:#FF8E7C; --fail-soft:#331817; --fail-line:#5E2C27;
-  --warn:#E3AC5B; --warn-soft:#31240F;
-  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+  /* Comfortable minimum for anything you tap. Used on phones only, so
+     the desktop layout keeps its tighter rhythm. */
+  --tap: 44px;
 }
 
 * { box-sizing: border-box; }
@@ -75,11 +59,10 @@ header {
   font: inherit; font-size: 13.5px; font-weight: 500;
   color: var(--ink-2); cursor: pointer; text-align: left;
 }
-.tab:hover { color: var(--ink); background: var(--surface-2); }
+@media (hover: hover) { .tab:hover { color: var(--ink); background: var(--surface-2); } }
 .tab--on {
-  background: var(--surface); border-color: var(--line);
+  background: var(--surface); border-color: var(--line-2);
   color: var(--ink); font-weight: 600;
-  box-shadow: 0 1px 2px rgba(15, 20, 28, .05);
 }
 .tab--on::after {
   content: ""; display: block; height: 2px; width: 100%;
@@ -113,7 +96,7 @@ header {
   border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
   border-radius: 7px; padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer;
 }
-.iconbtn:hover { border-color: var(--line-2); color: var(--ink); }
+@media (hover: hover) { .iconbtn:hover { border-color: var(--line-2); color: var(--ink); } }
 
 /* ---------- card ---------- */
 .card {
@@ -206,10 +189,13 @@ pre.code {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 13.5px; line-height: 1.85;
   overflow-x: auto; white-space: pre; color: var(--ink);
+  /* Scroll the snippet, not the page, when a line is too long. */
+  -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
 }
 
 .blank {
   font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 13.5px;
+  max-width: 100%;
   background: var(--surface); color: var(--ink);
   border: none; border-bottom: 2px dashed var(--accent);
   border-radius: 3px 3px 0 0; padding: 1px 6px;
@@ -227,12 +213,12 @@ pre.code {
   padding: 8px 18px; border-radius: 8px;
   font: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
 }
-.primary:hover { filter: brightness(1.08); }
+@media (hover: hover) { .primary:hover { filter: brightness(1.08); } }
 .ghost {
   background: transparent; color: var(--ink-2); border: 1px solid var(--line);
   padding: 8px 14px; border-radius: 8px; font: inherit; font-size: 14px; cursor: pointer;
 }
-.ghost:hover { border-color: var(--line-2); color: var(--ink); }
+@media (hover: hover) { .ghost:hover { border-color: var(--line-2); color: var(--ink); } }
 .kbd { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3); margin-left: auto; }
 
 .hintbox {
@@ -294,7 +280,7 @@ pre.code {
   font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 500;
   display: grid; place-items: center;
 }
-.cell:hover { border-color: var(--accent); }
+@media (hover: hover) { .cell:hover { border-color: var(--accent); } }
 .cell--pass { background: var(--pass-soft); border-color: var(--pass-line); color: var(--pass); }
 .cell--fail { background: var(--fail-soft); border-color: var(--fail-line); color: var(--fail); }
 .cell--here { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -323,15 +309,102 @@ pre.code {
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
-@media (max-width: 680px) {
-  .bar { gap: 10px; }
-  .tabs { width: 100%; margin-left: 0; }
-  .tab { flex: 1; }
+/* =====================================================================
+   Phones. Three things matter here and the rest follows from them:
+
+   1. Nothing may overflow sideways. The code snippet scrolls inside its
+      own box; the page itself never does.
+   2. Anything you tap is at least --tap tall.
+   3. The answer input is >= 16px, because below that iOS zooms the whole
+      page in the moment you focus it and never zooms back out.
+   ===================================================================== */
+
+@media (max-width: 860px) {
+  /* Long question text and code can only overflow inside their own
+     boxes, so a stray wide child cannot drag the page sideways. */
+  html, body { overflow-x: hidden; }
 }
 
-@media (max-width: 560px) {
-  .card__body { padding: 18px 16px; }
+@media (max-width: 680px) {
+  body { font-size: 15.5px; }
+
+  .wrap {
+    padding: 0 16px 56px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  /* The header stops being sticky: on a short screen it ate a third of
+     the viewport once the tabs wrapped underneath it. */
+  header { position: static; }
+  .bar { padding: 12px 16px; gap: 10px; }
+  .brand h1 { font-size: 16px; }
+
+  /* Three tracks with long labels will not fit side by side, and
+     wrapping them stacks three full-width rows. Scroll them instead. */
+  .tabs {
+    width: 100%; margin-left: 0;
+    flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    /* Bleed to the screen edge so the row reads as scrollable. */
+    margin-inline: -16px; padding-inline: 16px;
+    scroll-snap-type: x proximity;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto; scroll-snap-align: start;
+    min-height: var(--tap); justify-content: center;
+    padding: 7px 14px;
+  }
+
+  .statusrow { margin-top: 16px; gap: 10px; }
+  .meter__track { flex: 1; width: auto; min-width: 80px; }
+
+  .card { margin-top: 12px; border-radius: 10px; }
   .card__top { padding: 12px 16px; }
-  .verdict { padding: 16px; }
+  .card__body { padding: 18px 16px; }
+  .ask { font-size: 16.5px; }
+  .verdict, .movingon { padding: 16px; }
+
+  pre.code {
+    margin-top: 16px; padding: 14px;
+    /* Bleed the snippet to the card edge: on a narrow screen the extra
+       few characters are worth more than the gutter. */
+    margin-inline: -16px; border-radius: 0;
+    border-left: none; border-right: none;
+    font-size: 13px;
+  }
+
+  /* 16px exactly — the threshold below which iOS zooms on focus. */
+  .blank { font-size: 16px; padding: 2px 6px; }
+
+  /* Check is the button you press every question, so it gets the full
+     width and the others share the row under it. */
+  .actions { gap: 8px; margin-top: 16px; }
+  .primary { flex: 1 0 100%; min-height: var(--tap); font-size: 15px; }
+  .ghost { flex: 1 1 auto; min-height: var(--tap); text-align: center; justify-content: center; }
+  .iconbtn { min-height: 34px; padding: 6px 12px; }
   .kbd { display: none; }
+
+  /* 26px squares are a coin toss to hit with a thumb. */
+  .strip { gap: 6px; }
+  .cell { width: 34px; height: 34px; border-radius: 6px; font-size: 11.5px; }
+  .strip-wrap { margin-top: 24px; }
+  .legend { width: 100%; margin-left: 0; gap: 12px; }
+
+  .notes { margin-top: 24px; padding: 16px; border-radius: 10px; }
+  .done { padding: 32px 16px; }
+  .why { font-size: 14.5px; }
 }
+
+/* Small phones — the label under each tab is the first thing to go. */
+@media (max-width: 380px) {
+  .tab__count { display: none; }
+  .bar { padding: 10px 14px; }
+  .wrap { padding-bottom: 44px; }
+  .ghost { font-size: 13.5px; padding: 8px 10px; }
+}
+
+/* Tapping should not flash a translucent box over the button. */
+button, a, input { -webkit-tap-highlight-color: transparent; }

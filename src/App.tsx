@@ -17,8 +17,7 @@ export default function App() {
       <header>
         <div className="bar">
           <div className="brand">
-            <h1>Type Check</h1>
-            <span className="sub">interview drills</span>
+            <h1>Coding Game</h1>
           </div>
           <Tabs tracks={TRACKS} value={trackId} onChange={setTrackId} />
         </div>

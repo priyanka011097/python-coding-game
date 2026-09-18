@@ -1,9 +1,10 @@
-# Type Check
+# Coding Game
 
-An interview drill app with two tracks:
+A fill-in-the-blank coding game with three tracks:
 
-- **TypeScript + React** — 72 questions
-- **Python + AI** — 90 questions
+- **TypeScript + React**
+- **Python — zero to DSA**
+- **Data + AI**
 
 Fill-in-the-blank, one question at a time. Built for interview prep, so **the
 source is meant to be read**, not just run: every file demonstrates a typing
