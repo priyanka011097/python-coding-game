@@ -50,6 +50,23 @@ header {
 .brand h1 { font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -.015em; }
 .brand .sub { font-size: 12px; color: var(--ink-3); }
 
+/* ---------- mode switch ---------- */
+.modes {
+  display: inline-flex; padding: 3px; gap: 2px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 9px;
+}
+.mode {
+  background: transparent; border: none; border-radius: 6px;
+  padding: 5px 12px; font: inherit; font-size: 13px; font-weight: 500;
+  color: var(--ink-2); cursor: pointer;
+}
+@media (hover: hover) { .mode:hover { color: var(--ink); } }
+.mode--on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+/* The cards mode is a narrower column than the game. */
+.bar--cards { max-width: 760px; padding-inline: 16px; }
+.bar--cards .modes, .bar--prep .modes { margin-left: auto; }
+.bar--prep { max-width: 1080px; }
+
 /* ---------- tabs ---------- */
 .tabs { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
 .tab {

@@ -1,12 +1,38 @@
-# Coding Game
+# Interview Prep
 
-A fill-in-the-blank coding game with three tracks:
+One app, three modes — switch between them from the header.
+
+**Coding Game** — fill-in-the-blank, one question at a time, in three tracks:
 
 - **TypeScript + React**
 - **Python — zero to DSA**
 - **Data + AI**
 
-Fill-in-the-blank, one question at a time. Built for interview prep, so **the
+**Study Cards** — 1,103 question/answer flashcards across 11 decks (React,
+JS/TS, Backend, Databases, System Design, AI, DevOps, Security, Testing, DSA,
+and 100 Python coding problems). Per-deck and overall "viewed" progress, flag
+unclear answers (`D`) and review them in one list, rewrite any answer in your
+own words, read answers aloud at 0.5×–2×, `←`/`→` to move, a name greeting,
+"Restart Study", and a duck that cheers you on every few cards. The mode is
+lazy-loaded, so its decks stay out of the game's bundle.
+
+**Interview Prep** — an AI interviewer on NVIDIA's hosted LLMs. Pick any of
+DSA, System Design, Machine Learning, AI (GenAI & LLMs), CS Fundamentals, 18 languages and 12 databases, then answer one generated question at a time.
+Each answer is graded 0–10 with feedback, what you missed, and a model answer.
+A score of 7+ raises that topic's difficulty (levels 1–10, Basics → Expert),
+3 or less lowers it, and topics take turns. A readiness score (70% = ready)
+rewards acing *hard* questions, and an AI readiness report lists strengths,
+gaps and a study plan.
+
+Setup: put `NVIDIA_API_KEY=nvapi-…` in `.env.local` (or `.env`; both are
+git-ignored), optionally `NVIDIA_MODEL=…`, and restart `npm run dev`. The key
+stays on the local Vite server (`server/nvidiaProxy.ts` serves `/api/llm`) and
+never reaches the browser. See `.env.example`.
+
+Merged from the standalone `interviewPrepCards` app; it uses the same
+localStorage keys (`studycards_*_v1`), so its saved data format is unchanged.
+
+The Coding Game is Built for interview prep, so **the
 source is meant to be read**, not just run: every file demonstrates a typing
 pattern and says so in a comment at the top.
 
@@ -57,7 +83,7 @@ npm run build       # typecheck + production bundle into dist/
 ```
 src/
 ├── main.tsx                  entry point
-├── App.tsx                   which track is on screen
+├── App.tsx                   which mode (game / cards) and track is on screen
 ├── types.ts                  every shape in one place
 ├── styles.css                design tokens, light + dark
 ├── data/
@@ -76,6 +102,26 @@ src/
     ├── ScoreStrip.tsx
     ├── RulesPanel.tsx
     └── Summary.tsx
+
+src/cards/                    the Study Cards mode
+├── CardsMode.tsx             all flashcard state + persistence, keyboard
+├── types.ts                  Flashcard, Deck, FlagInfo
+├── storage.ts                localStorage keys and safe helpers
+├── cards.css                 scoped under .sc, uses the shared tokens
+├── data/
+│   ├── decks.ts              deck order, icons, totals
+│   └── *.ts                  one file per deck
+├── hooks/
+│   ├── useSpeech.ts          read-aloud with adjustable speed
+│   └── useDuck.ts            the celebration duck
+└── components/
+    ├── TopicGrid.tsx         home screen deck picker
+    ├── Flashcard.tsx         question, answer, toolbar, editor
+    ├── AnswerText.tsx        ~~~ fences -> code blocks
+    ├── ProgressBar.tsx
+    ├── FlaggedModal.tsx
+    ├── SettingsModal.tsx
+    └── Duck.tsx
 ```
 
 ## Coverage
