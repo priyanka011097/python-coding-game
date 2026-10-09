@@ -15,8 +15,9 @@
    deletion, so "Reset" on one device is not undone by another.
    ===================================================================== */
 
-import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Connect, Plugin } from "vite";
+import type { ServerResponse } from "node:http";
+import type { Connect } from "vite";
+import { readBody } from "./http";
 import type { Mongo } from "./db";
 import { describeDbError } from "./db";
 import type { Sessions } from "./session";
@@ -66,25 +67,7 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const chunks: Buffer[] = [];
-    req.on("data", (chunk: Buffer) => {
-      size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
-        reject(new Error("too_large"));
-        req.destroy();
-        return;
-      }
-      chunks.push(chunk);
-    });
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-    req.on("error", reject);
-  });
-}
-
-function middleware({ mongo, sessions }: ProgressOptions): Connect.NextHandleFunction {
+export function progressMiddleware({ mongo, sessions }: ProgressOptions): Connect.NextHandleFunction {
   return (req, res, next) => {
     if (!req.url?.startsWith("/api/progress")) return next();
 
@@ -114,7 +97,7 @@ function middleware({ mongo, sessions }: ProgressOptions): Connect.NextHandleFun
         }
 
         if (req.method === "POST") {
-          const body = JSON.parse(await readBody(req)) as { changes?: unknown };
+          const body = JSON.parse(await readBody(req, MAX_BODY_BYTES)) as { changes?: unknown };
           const changes = (Array.isArray(body.changes) ? body.changes : []).filter(isChange);
           const now = new Date();
           if (changes.length) {
@@ -158,17 +141,5 @@ function middleware({ mongo, sessions }: ProgressOptions): Connect.NextHandleFun
         json(res, 503, { error: describeDbError(err) });
       }
     })();
-  };
-}
-
-export function progressSync(opts: ProgressOptions): Plugin {
-  return {
-    name: "progress-sync",
-    configureServer(server) {
-      server.middlewares.use(middleware(opts));
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(middleware(opts));
-    },
   };
 }

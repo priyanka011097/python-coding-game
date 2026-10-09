@@ -9,13 +9,15 @@
      POST /auth/logout            -> clear the session
      GET  /api/me                 -> who is signed in (or null)
 
-   Register this redirect URI on the OAuth client in Google Cloud Console:
+   Register a redirect URI on the OAuth client in Google Cloud Console for
+   every address the app is served from, e.g.
      http://localhost:5173/auth/google/callback
-   (or APP_URL + /auth/google/callback if APP_URL is set).
+     https://python-coding-game.vercel.app/auth/google/callback
    ===================================================================== */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Connect, Plugin } from "vite";
+import type { Connect } from "vite";
+import { publicBase } from "./http";
 import type { Sessions } from "./session";
 import { SESSION_COOKIE, STATE_COOKIE, clearCookie, parseCookies, randomToken, setCookie } from "./session";
 import type { UserStore } from "./users";
@@ -58,9 +60,16 @@ function redirect(res: ServerResponse, location: string): void {
   res.end();
 }
 
+/* Google accepts plain http:// sign-in only for "localhost". The same app
+   reached as 127.0.0.1 is refused (redirect_uri_mismatch), and a Wi-Fi
+   address like 192.168.x.x is blocked outright ("device_id and
+   device_name are required for private IP"). */
+const LOOPBACK_IP = /^(127\.\d+\.\d+\.\d+|\[::1\])(:\d+)?$/;
+const PRIVATE_IP = /^(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/;
+
 function baseUrl(req: IncomingMessage, appUrl: string | undefined): string {
   if (appUrl) return appUrl.replace(/\/+$/, "");
-  return `http://${req.headers.host ?? "localhost:5173"}`;
+  return publicBase(req);
 }
 
 /** The ID token comes straight from Google's token endpoint over TLS in
@@ -72,7 +81,7 @@ function decodeClaims(idToken: string): IdTokenClaims {
   return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as IdTokenClaims;
 }
 
-function middleware(opts: GoogleAuthOptions): Connect.NextHandleFunction {
+export function googleAuthMiddleware(opts: GoogleAuthOptions): Connect.NextHandleFunction {
   const configured = Boolean(opts.clientId && opts.clientSecret);
 
   return (req, res, next) => {
@@ -90,6 +99,14 @@ function middleware(opts: GoogleAuthOptions): Connect.NextHandleFunction {
 
     if (path === "/auth/google" && req.method === "GET") {
       if (!configured) return fail("not_configured");
+      const host = req.headers.host ?? "";
+      if (!opts.appUrl && LOOPBACK_IP.test(host)) {
+        // Same computer, spelled differently: continue on localhost.
+        const port = host.match(/:(\d+)$/)?.[1];
+        redirect(res, `http://localhost${port ? `:${port}` : ""}/auth/google`);
+        return;
+      }
+      if (!opts.appUrl && PRIVATE_IP.test(host)) return fail("private_ip");
       const state = randomToken();
       setCookie(res, STATE_COOKIE, state, { maxAgeSeconds: 600, secure });
       const params = new URLSearchParams({
@@ -173,17 +190,5 @@ function middleware(opts: GoogleAuthOptions): Connect.NextHandleFunction {
     }
 
     next();
-  };
-}
-
-export function googleAuth(opts: GoogleAuthOptions): Plugin {
-  return {
-    name: "google-auth",
-    configureServer(server) {
-      server.middlewares.use(middleware(opts));
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(middleware(opts));
-    },
   };
 }
