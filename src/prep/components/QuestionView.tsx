@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { PrepQuestion } from "../types";
 import { LEVEL_NAMES, topicLabel } from "../topics";
-import { RichText } from "./RichText";
+import { SpokenQuestion } from "./SpokenQuestion";
+import { useDictation } from "../useDictation";
 
 interface QuestionViewProps {
   question: PrepQuestion;
@@ -16,11 +17,27 @@ export function QuestionView({ question, number, busy, onSubmit, onSkip }: Quest
   const [hint, setHint] = useState<boolean>(false);
   const box = useRef<HTMLTextAreaElement>(null);
 
+  /* Each spoken phrase is appended to whatever is already typed, with a
+     space between, so typing and talking can be mixed freely. */
+  const dictation = useDictation((spoken) =>
+    setAnswer((prev) => (prev === "" || /\s$/.test(prev) ? prev + spoken : `${prev} ${spoken}`)),
+  );
+
   useEffect(() => {
     box.current?.focus();
   }, []);
 
-  const canSubmit = answer.trim() !== "" && !busy;
+  /* Words still being recognised count too, so stopping mid-sentence and
+     submitting straight away does not drop the last few words. */
+  const fullAnswer = dictation.interim
+    ? `${answer}${answer === "" || /\s$/.test(answer) ? "" : " "}${dictation.interim}`
+    : answer;
+  const canSubmit = fullAnswer.trim() !== "" && !busy;
+
+  const submit = (): void => {
+    dictation.stop();
+    onSubmit(fullAnswer);
+  };
 
   return (
     <div className="pp-card">
@@ -34,8 +51,7 @@ export function QuestionView({ question, number, busy, onSubmit, onSkip }: Quest
       </div>
 
       <div className="pp-card__body">
-        <h2 className="pp-title">{question.title}</h2>
-        <RichText text={question.question} />
+        <SpokenQuestion question={question} />
 
         {question.hint &&
           (hint ? (
@@ -46,9 +62,25 @@ export function QuestionView({ question, number, busy, onSubmit, onSkip }: Quest
             </button>
           ))}
 
-        <label htmlFor="pp-answer" className="pp-label pp-answer-label">
-          Your answer
-        </label>
+        <div className="pp-answer-head">
+          <label htmlFor="pp-answer" className="pp-label">
+            Your answer
+          </label>
+          {dictation.supported && (
+            <button
+              type="button"
+              className={`pp-mic${dictation.listening ? " pp-mic--on" : ""}`}
+              aria-pressed={dictation.listening}
+              aria-label={dictation.listening ? "Stop voice input" : "Speak your answer"}
+              title={dictation.listening ? "Stop listening" : "Speak your answer (voice to text)"}
+              disabled={busy}
+              onClick={dictation.toggle}
+            >
+              <span aria-hidden="true">{dictation.listening ? "●" : "🎤"}</span>
+              {dictation.listening ? "Listening… tap to stop" : "Speak"}
+            </button>
+          )}
+        </div>
         <textarea
           id="pp-answer"
           ref={box}
@@ -62,7 +94,7 @@ export function QuestionView({ question, number, busy, onSubmit, onSkip }: Quest
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && canSubmit) {
               e.preventDefault();
-              onSubmit(answer);
+              submit();
             }
             // Tab inserts indentation instead of leaving the box — it is a code editor.
             if (e.key === "Tab" && !e.shiftKey) {
@@ -75,17 +107,35 @@ export function QuestionView({ question, number, busy, onSubmit, onSkip }: Quest
             }
           }}
         />
+        {dictation.listening && (
+          <p className="pp-interim" aria-live="polite">
+            {dictation.interim || "Listening… start speaking."}
+          </p>
+        )}
+        {dictation.error && (
+          <p className="pp-error pp-error--inline" role="alert">
+            {dictation.error}
+          </p>
+        )}
 
         <div className="pp-actions">
           <button
             type="button"
             className="pp-btn pp-btn--primary"
             disabled={!canSubmit}
-            onClick={() => onSubmit(answer)}
+            onClick={submit}
           >
             {busy ? "Grading…" : "Submit answer"}
           </button>
-          <button type="button" className="pp-btn pp-btn--ghost" disabled={busy} onClick={onSkip}>
+          <button
+            type="button"
+            className="pp-btn pp-btn--ghost"
+            disabled={busy}
+            onClick={() => {
+              dictation.stop();
+              onSkip();
+            }}
+          >
             I don't know, show me
           </button>
           <span className="pp-kbd">Ctrl + Enter to submit</span>

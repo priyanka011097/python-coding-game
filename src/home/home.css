@@ -1,0 +1,101 @@
+/* =====================================================================
+   home.css — the Home dashboard. Scoped under .hm, shared tokens, so it
+   follows light and dark mode like everything else.
+   ===================================================================== */
+
+.hm { max-width: 1080px; margin: 0 auto; padding: 26px 20px 64px; }
+
+.hm-head { margin-bottom: 20px; }
+.hm-title { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+.hm-sub { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; }
+.hm-muted { color: var(--ink-3); font-size: 12.5px; }
+
+/* ---------- KPI row ---------- */
+.hm-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+.hm-stat {
+  display: flex; flex-direction: column; gap: 4px; text-align: left; cursor: pointer;
+  padding: 16px 18px; border-radius: 12px; font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+  transition: border-color .15s ease, transform .15s ease;
+}
+@media (hover: hover) { .hm-stat:hover { border-color: var(--accent); transform: translateY(-1px); } }
+.hm-stat__label { font-size: 12.5px; color: var(--ink-2); }
+.hm-stat__value { font-size: 32px; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+.hm-stat__detail { font-size: 12.5px; color: var(--ink-3); }
+
+/* ---------- section cards ---------- */
+.hm-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.hm-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 18px 18px 12px; min-width: 0;
+}
+.hm-card--wide { grid-column: 1 / -1; }
+.hm-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.hm-card__head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.hm-line { margin: 0 0 6px; font-size: 13.5px; color: var(--ink-2); }
+.hm-line b, .hm-row__nums b { color: var(--ink); font-weight: 600; }
+
+.hm-legend { display: flex; gap: 12px; font-size: 11.5px; color: var(--ink-3); }
+.hm-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.hm-dot { width: 9px; height: 9px; border-radius: 2.5px; display: inline-block; background: var(--accent-soft); border: 1px solid var(--line-2); }
+.hm-dot--pass { background: var(--pass); border-color: var(--pass); }
+.hm-dot--fail { background: var(--fail); border-color: var(--fail); }
+
+.hm-list, .hm-decks { list-style: none; margin: 0; padding: 0; }
+.hm-decks { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); column-gap: 18px; }
+
+/* A clickable row: name + numbers on one line, meter underneath. */
+.hm-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: baseline;
+  /* Bleeds 8px past the card padding on each side, so the hover tint has
+     room while the meter still spans the full content width. */
+  width: calc(100% + 16px); padding: 10px 8px; margin: 0 -8px; box-sizing: border-box;
+  background: none; border: none; border-radius: 8px; cursor: pointer; text-align: left;
+  font: inherit; color: var(--ink);
+}
+@media (hover: hover) { .hm-row:hover { background: var(--surface-2); } }
+.hm-row__name { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; min-width: 0; }
+.hm-row__nums { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hm-row .hm-meter { grid-column: 1 / -1; }
+.hm-icon { font-size: 16px; line-height: 1; }
+
+/* Meter: the unfilled track is a light step of the same accent. Adjacent
+   fills are separated by a 2px surface gap. */
+.hm-meter { display: flex; gap: 2px; height: 8px; border-radius: 99px; overflow: hidden; background: var(--accent-soft); }
+.hm-meter__fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+.hm-meter__fill--pass { background: var(--pass); }
+.hm-meter__fill--fail { background: var(--fail); }
+
+/* ---------- per-topic breakdown ---------- */
+.hm-topics { margin: 0 0 6px; }
+.hm-topics summary { cursor: pointer; font-size: 12.5px; color: var(--accent-ink); padding: 2px 0 6px; }
+.hm-topics ul {
+  list-style: none; margin: 4px 0 8px; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px;
+}
+.hm-topics li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 6px; align-items: baseline; }
+.hm-topics li .hm-meter { grid-column: 1 / -1; height: 5px; }
+.hm-topics__name { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hm-topics__num { font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+.hm-empty p { margin: 4px 0 14px; color: var(--ink-2); font-size: 14px; line-height: 1.55; }
+.hm-btn {
+  margin-bottom: 8px; padding: 9px 16px; border-radius: 8px; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent);
+  font: inherit; font-size: 14px; font-weight: 600;
+}
+@media (hover: hover) { .hm-btn:hover { filter: brightness(1.08); } }
+
+@media (max-width: 860px) {
+  .hm-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 680px) {
+  .hm { padding: 18px 16px 48px; }
+  .hm-title { font-size: 22px; }
+  .hm-stats { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .hm-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; padding: 14px 16px; }
+  .hm-stat__label { flex: 1 0 100%; }
+  .hm-stat__value { font-size: 26px; }
+  .hm-decks { grid-template-columns: minmax(0, 1fr); }
+  .hm-row__nums { white-space: normal; text-align: right; }
+}

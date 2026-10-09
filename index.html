@@ -8,6 +8,24 @@
     />
     <meta name="theme-color" content="#000000" />
     <title>Interview Prep</title>
+    <!-- Pick the theme before anything paints, so there is no flash of the
+         wrong one. Same rule as src/theme/theme.ts: saved choice, else the
+         system setting. -->
+    <script>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem("interview-prep-theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", t === "light" ? "#F5F6F8" : "#000000");
+      })();
+    </script>
+    <style>
+      html { background: #000; }
+      html[data-theme="light"] { background: #F5F6F8; }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,7 +33,7 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     />
   </head>
-  <body style="background:#000">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

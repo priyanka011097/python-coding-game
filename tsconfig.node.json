@@ -1,0 +1,18 @@
+{
+  /* Type-checks the server side: vite.config.ts and server/*. These run in
+     Node inside the Vite dev/preview server, never in the browser. */
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["vite.config.ts", "server"]
+}

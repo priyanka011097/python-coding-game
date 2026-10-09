@@ -1,6 +1,7 @@
 import type { HistoryItem, Level } from "../types";
 import { LEVEL_NAMES, topicLabel } from "../topics";
 import { RichText } from "./RichText";
+import { SpokenQuestion } from "./SpokenQuestion";
 
 interface FeedbackViewProps {
   item: HistoryItem;
@@ -43,8 +44,7 @@ export function FeedbackView({ item, number, newLevel, busy, onNext }: FeedbackV
       </div>
 
       <div className="pp-card__body">
-        <h2 className="pp-title">{question.title}</h2>
-        <RichText text={question.question} />
+        <SpokenQuestion question={question} />
 
         {!skipped && (
           <details className="pp-yours">

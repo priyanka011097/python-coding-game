@@ -3,7 +3,7 @@
 
    The browser never sees the NVIDIA API key. It sends chat messages to
    this local endpoint; the dev (or preview) server adds the key from
-   NVIDIA_API_KEY in .env.local and forwards the call to NVIDIA's
+   NVIDIA_API_KEY in .env and forwards the call to NVIDIA's
    OpenAI-compatible endpoint. Doing it server-side also sidesteps CORS,
    which NVIDIA's API does not allow from browsers.
    ===================================================================== */
@@ -18,6 +18,11 @@ const MAX_BODY_BYTES = 64 * 1024;
 interface ProxyOptions {
   apiKey: string | undefined;
   model: string | undefined;
+  /** "on" lets reasoning models think before answering (slower). */
+  thinking?: string | undefined;
+  /** When set, only signed-in users may call the model, so nobody else
+   *  can spend your NVIDIA quota. */
+  isSignedIn?: (req: IncomingMessage) => boolean;
 }
 
 interface ChatMessage {
@@ -63,7 +68,8 @@ function isMessages(value: unknown): value is ChatMessage[] {
   );
 }
 
-function middleware({ apiKey, model }: ProxyOptions): Connect.NextHandleFunction {
+function middleware({ apiKey, model, thinking: thinkingEnv, isSignedIn }: ProxyOptions): Connect.NextHandleFunction {
+  const thinking = thinkingEnv?.toLowerCase() === "on";
   return (req, res, next) => {
     if (!req.url?.startsWith("/api/llm")) return next();
 
@@ -74,6 +80,10 @@ function middleware({ apiKey, model }: ProxyOptions): Connect.NextHandleFunction
     }
     if (req.method !== "POST") {
       send(res, 405, { error: "Method not allowed" });
+      return;
+    }
+    if (isSignedIn && !isSignedIn(req)) {
+      send(res, 401, { error: "not_signed_in" });
       return;
     }
     if (!apiKey) {
@@ -95,25 +105,36 @@ function middleware({ apiKey, model }: ProxyOptions): Connect.NextHandleFunction
         const temperature =
           typeof parsed.temperature === "number" ? Math.min(Math.max(parsed.temperature, 0), 1) : 0.6;
         const maxTokens =
-          typeof parsed.maxTokens === "number" ? Math.min(Math.max(parsed.maxTokens, 64), 2048) : 1024;
+          typeof parsed.maxTokens === "number" ? Math.min(Math.max(parsed.maxTokens, 64), 4096) : 1500;
 
-        const upstream = await fetch(NVIDIA_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            model: model || DEFAULT_MODEL,
-            messages: parsed.messages,
-            temperature,
-            top_p: 0.9,
-            max_tokens: maxTokens,
-            stream: false,
-          }),
-          signal: AbortSignal.timeout(90_000),
-        });
+        /* Reasoning models (Nemotron 3, etc.) "think" first, and that hidden
+           reasoning counts against max_tokens. On hard questions it used the
+           whole budget and left the visible reply empty. Writing and grading
+           an interview question does not need it, so it is switched off; set
+           NVIDIA_THINKING=on in .env to allow it. */
+        const call = (withThinkingFlag: boolean): Promise<Response> =>
+          fetch(NVIDIA_URL, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              model: model || DEFAULT_MODEL,
+              messages: parsed.messages,
+              temperature,
+              top_p: 0.9,
+              max_tokens: maxTokens,
+              stream: false,
+              ...(withThinkingFlag ? { chat_template_kwargs: { enable_thinking: thinking } } : {}),
+            }),
+            signal: AbortSignal.timeout(120_000),
+          });
+
+        let upstream = await call(true);
+        // A model that does not know the flag may reject it; retry plain once.
+        if (upstream.status === 400 || upstream.status === 422) upstream = await call(false);
 
         const text = await upstream.text();
         if (upstream.status === 401 || upstream.status === 403) {
@@ -127,9 +148,19 @@ function middleware({ apiKey, model }: ProxyOptions): Connect.NextHandleFunction
           return;
         }
         const data = JSON.parse(text) as {
-          choices?: { message?: { content?: string } }[];
+          choices?: { message?: { content?: string | null }; finish_reason?: string }[];
         };
-        const content = data.choices?.[0]?.message?.content ?? "";
+        const choice = data.choices?.[0];
+        const content = choice?.message?.content ?? "";
+        if (!content.trim()) {
+          send(res, 502, {
+            error:
+              choice?.finish_reason === "length"
+                ? "The model ran out of room before answering. Try again, or pick a different NVIDIA_MODEL."
+                : "The model sent back an empty reply. Try again.",
+          });
+          return;
+        }
         send(res, 200, { content });
       } catch (err) {
         send(res, 502, { error: err instanceof Error ? err.message : "LLM request failed" });

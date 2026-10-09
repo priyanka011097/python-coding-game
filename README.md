@@ -1,6 +1,9 @@
 # Interview Prep
 
-One app, three modes — switch between them from the header.
+One app, three modes — switch between them from the header — plus a **Home**
+dashboard (the house button) showing progress across every section and
+sub-section, with shortcuts into each. Light and dark mode via the sun/moon
+button (follows the system setting until you pick one).
 
 **Coding Game** — fill-in-the-blank, one question at a time, in three tracks:
 
@@ -36,6 +39,24 @@ The Coding Game is Built for interview prep, so **the
 source is meant to be read**, not just run: every file demonstrates a typing
 pattern and says so in a comment at the top.
 
+## Accounts and saved progress
+
+- **Sign in with Google** (sign up = first sign-in). The OAuth flow runs on the
+  local Vite server (`server/googleAuth.ts`); sessions are signed, HttpOnly
+  cookies (`server/session.ts`). The AI endpoint requires sign-in.
+- **Progress follows the account** when `MONGODB_URI` is set: accounts go to the
+  `users` collection, and each mode's saved state is mirrored per user to
+  `progress` (`server/progress.ts`, `src/sync/progressSync.ts`). The newest change
+  wins per item, so two devices cannot overwrite each other with stale data.
+  Logging out clears that browser's copy. Without MongoDB, progress stays in the
+  browser and accounts go to `.data/users.json`.
+- **Read aloud and voice input** in Interview Prep use the browser's built-in
+  speech APIs (no key needed; voice input works in Chrome and Edge).
+
+All keys live in `.env` (git-ignored) — see `.env.example` for every variable:
+`NVIDIA_API_KEY`, `CLIENT_ID` / `CLIENT_SECRET` (Google OAuth, redirect URI
+`http://localhost:5173/auth/google/callback`), `SESSION_SECRET`, `MONGODB_URI`.
+
 ## Run it
 
 ```bash
@@ -46,7 +67,7 @@ npm run dev     # http://localhost:5173
 Other scripts:
 
 ```bash
-npm run typecheck   # tsc --noEmit — the fast feedback loop
+npm run typecheck   # browser code + server code (tsconfig.node.json)
 npm run build       # typecheck + production bundle into dist/
 ```
 
