@@ -150,6 +150,11 @@ header {
   font-family: Roboto, "IBM Plex Sans", sans-serif; font-size: 15px; font-weight: 500; text-decoration: none;
 }
 @media (hover: hover) { .google-btn:hover { background: #f6f8fb; } }
+.signin__note {
+  margin: -8px 0 16px; padding: 10px 12px; border-radius: 8px; text-align: left;
+  background: var(--warn-soft); color: var(--warn); font-size: 13px; line-height: 1.5;
+}
+.signin__note a { color: inherit; font-weight: 600; }
 .signin__error {
   margin-top: 18px; padding: 12px 14px; border-radius: 8px; text-align: left;
   background: var(--fail-soft); border: 1px solid var(--fail-line); color: var(--fail); font-size: 13.5px;

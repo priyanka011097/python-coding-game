@@ -1,5 +1,5 @@
 /* =====================================================================
-   nvidiaProxy.ts — a Vite plugin that serves POST /api/llm.
+   nvidiaProxy.ts — serves /api/llm (see server/app.ts for where it runs).
 
    The browser never sees the NVIDIA API key. It sends chat messages to
    this local endpoint; the dev (or preview) server adds the key from
@@ -9,13 +9,14 @@
    ===================================================================== */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Connect, Plugin } from "vite";
+import type { Connect } from "vite";
+import { readBody } from "./http";
 
 const NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b";
 const MAX_BODY_BYTES = 64 * 1024;
 
-interface ProxyOptions {
+export interface ProxyOptions {
   apiKey: string | undefined;
   model: string | undefined;
   /** "on" lets reasoning models think before answering (slower). */
@@ -36,24 +37,6 @@ function send(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const chunks: Buffer[] = [];
-    req.on("data", (chunk: Buffer) => {
-      size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
-        reject(new Error("Request too large"));
-        req.destroy();
-        return;
-      }
-      chunks.push(chunk);
-    });
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-    req.on("error", reject);
-  });
-}
-
 function isMessages(value: unknown): value is ChatMessage[] {
   return (
     Array.isArray(value) &&
@@ -68,7 +51,7 @@ function isMessages(value: unknown): value is ChatMessage[] {
   );
 }
 
-function middleware({ apiKey, model, thinking: thinkingEnv, isSignedIn }: ProxyOptions): Connect.NextHandleFunction {
+export function nvidiaMiddleware({ apiKey, model, thinking: thinkingEnv, isSignedIn }: ProxyOptions): Connect.NextHandleFunction {
   const thinking = thinkingEnv?.toLowerCase() === "on";
   return (req, res, next) => {
     if (!req.url?.startsWith("/api/llm")) return next();
@@ -93,7 +76,7 @@ function middleware({ apiKey, model, thinking: thinkingEnv, isSignedIn }: ProxyO
 
     void (async () => {
       try {
-        const parsed = JSON.parse(await readBody(req)) as {
+        const parsed = JSON.parse(await readBody(req, MAX_BODY_BYTES)) as {
           messages?: unknown;
           temperature?: unknown;
           maxTokens?: unknown;
@@ -166,17 +149,5 @@ function middleware({ apiKey, model, thinking: thinkingEnv, isSignedIn }: ProxyO
         send(res, 502, { error: err instanceof Error ? err.message : "LLM request failed" });
       }
     })();
-  };
-}
-
-export function nvidiaProxy(options: ProxyOptions): Plugin {
-  return {
-    name: "nvidia-llm-proxy",
-    configureServer(server) {
-      server.middlewares.use(middleware(options));
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(middleware(options));
-    },
   };
 }

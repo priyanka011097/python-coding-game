@@ -19,6 +19,11 @@ function GoogleLogo() {
   );
 }
 
+/** Any address other than localhost: Google will refuse it (an https://
+ *  deployment is fine, since it sets APP_URL and is not a bare IP). */
+const wrongHost =
+  window.location.protocol === "http:" && window.location.hostname !== "localhost";
+
 export function SignIn({ error, callbackUrl }: SignInProps) {
   return (
     <div className="signin">
@@ -29,6 +34,15 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           Coding Game, Study Cards and AI Interview Prep. New here? Signing in with Google
           creates your account.
         </p>
+        {wrongHost && (
+          <p className="signin__note">
+            Google sign-in only works at{" "}
+            <a href={`http://localhost:${window.location.port || "5173"}/`}>
+              localhost:{window.location.port || "5173"}
+            </a>{" "}
+            on this computer, not at {window.location.hostname}.
+          </p>
+        )}
         {/* A plain link, not fetch: the browser must follow Google's redirects. */}
         <a className="google-btn" href="/auth/google">
           <GoogleLogo />

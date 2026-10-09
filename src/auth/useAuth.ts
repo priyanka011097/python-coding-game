@@ -68,6 +68,8 @@ const AUTH_ERRORS: Record<string, string> = {
     "Google rejected the client secret. Copy the secret for this OAuth client from Google Cloud Console into CLIENT_SECRET (or GOOGLE_CLIENT_SECRET) in study/.env, save, and try again.",
   invalid_grant: "That sign-in code was already used or expired. Please try again.",
   email_not_verified: "Your Google account's email is not verified.",
+  private_ip:
+    "Google sign-in does not work on a Wi-Fi address like this one. On this computer, open http://localhost:5173 instead. Signing in from a phone needs a public https:// address.",
   google_unreachable: "Could not reach Google. Check your internet connection and try again.",
   db_unavailable: "Signed in with Google, but the database could not be reached. Check MONGODB_URI and Atlas Network Access, then try again.",
 };
