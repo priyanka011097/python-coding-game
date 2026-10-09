@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { HistoryItem, Level, PrepQuestion, PrepState } from "./types";
 import { TOPIC_BY_ID, topicLabel } from "./topics";
 import { nextLevel, overallReadiness } from "./readiness";
-import type { LlmStatus, ReadinessReport } from "./llm";
+import type { ReadinessReport } from "./llm";
 import { LlmError, evaluateAnswer, generateQuestion, llmStatus, readinessReport } from "./llm";
 import { TopicPicker } from "./components/TopicPicker";
 import { QuestionView } from "./components/QuestionView";
@@ -19,11 +19,11 @@ import { FeedbackView } from "./components/FeedbackView";
 import { ReadinessPanel } from "./components/ReadinessPanel";
 import "./prep.css";
 
-const STORAGE_KEY = "prep_session_v1";
+export const STORAGE_KEY = "prep_session_v1";
 
 const EMPTY: PrepState = { topicIds: [], levels: {}, history: [], turn: 0, screen: { phase: "setup" } };
 
-function loadState(): PrepState {
+export function loadState(): PrepState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return EMPTY;
@@ -43,7 +43,6 @@ export function PrepMode() {
   const [busy, setBusy] = useState<Busy>("none");
   const [error, setError] = useState<string | null>(null);
   const [missingKey, setMissingKey] = useState<boolean>(false);
-  const [status, setStatus] = useState<LlmStatus | null | undefined>(undefined);
   const [report, setReport] = useState<ReadinessReport | null>(null);
   const abort = useRef<AbortController | null>(null);
 
@@ -57,7 +56,6 @@ export function PrepMode() {
 
   useEffect(() => {
     void llmStatus().then((s) => {
-      setStatus(s);
       if (s && !s.configured) setMissingKey(true);
     });
     return () => abort.current?.abort();
@@ -145,32 +143,29 @@ export function PrepMode() {
 
   return (
     <div className="pp">
-      <div className="pp-head">
-        <div>
-          <h2 className="pp-h1">Interview Prep</h2>
-          <p className="pp-muted">
-            AI interviewer · one question at a time, simple → hard
-            {status?.model ? <> · <span className="pp-mono">{status.model}</span></> : null}
-          </p>
-        </div>
-        {inSession && (
+      {/* Reset is reachable whenever there is something to reset, including
+          from the topic picker — not only mid-session. */}
+      {(inSession || state.history.length > 0) && (
+        <div className="pp-head">
           <div className="pp-head__actions">
-            <button
-              type="button"
-              className="pp-btn pp-btn--ghost"
-              onClick={() => {
-                abort.current?.abort();
-                setState((prev) => ({ ...prev, screen: { phase: "setup" } }));
-              }}
-            >
-              Change topics
-            </button>
+            {inSession && (
+              <button
+                type="button"
+                className="pp-btn pp-btn--ghost"
+                onClick={() => {
+                  abort.current?.abort();
+                  setState((prev) => ({ ...prev, screen: { phase: "setup" } }));
+                }}
+              >
+                Change topics
+              </button>
+            )}
             <button type="button" className="pp-btn pp-btn--ghost" onClick={resetAll}>
               Reset
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {missingKey && (
         <div className="pp-notice">

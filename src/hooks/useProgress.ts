@@ -39,8 +39,9 @@ function hasSeeded(track: TrackId): boolean {
  *
  *  The seed WINS over saved entries: it represents questions worked
  *  through before the app existed, so a stale wrong attempt sitting in
- *  localStorage should not override it. It is applied exactly once —
- *  "Reset track" clears the flag, so a reset really does empty the board.
+ *  localStorage should not override it. It is applied exactly once:
+ *  the "seeded" flag records that, and "Reset track" keeps the flag set,
+ *  so a reset empties the board for good instead of re-applying it.
  *
  *  IMPORTANT: this function must stay pure. It runs inside a useState
  *  initialiser, and React StrictMode calls those TWICE in development.
@@ -48,7 +49,7 @@ function hasSeeded(track: TrackId): boolean {
  *  already set and returned the un-seeded progress — the seed silently
  *  vanished. The flag is written in an effect instead.
  */
-function initialProgress(track: TrackId, seed?: Progress): Progress {
+export function initialProgress(track: TrackId, seed?: Progress): Progress {
   const saved = readSaved(track);
   if (!seed || hasSeeded(track)) return saved;
   return { ...saved, ...seed };
@@ -104,8 +105,10 @@ export function useProgress(track: TrackId, seed?: Progress): UseProgress {
 
   const clear = useCallback((): void => {
     try {
-      // Drop the seeded flag as well, or the seed would come straight back.
-      window.localStorage.removeItem(seededKey(track));
+      /* Mark the seed as used. Removing the flag instead (the old
+         behaviour) made the next mount treat the seed as new and put the
+         pre-done questions straight back after every reset. */
+      window.localStorage.setItem(seededKey(track), "1");
     } catch {
       /* private browsing — nothing to do */
     }

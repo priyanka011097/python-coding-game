@@ -8,7 +8,7 @@
    ===================================================================== */
 
 import type { Evaluation, HistoryItem, Level, PrepQuestion, QuestionType } from "./types";
-import { LEVEL_NAMES, topicLabel } from "./topics";
+import { LEVEL_NAMES, TOPIC_BY_ID, topicLabel } from "./topics";
 
 interface Message {
   role: "system" | "user" | "assistant";
@@ -55,6 +55,9 @@ async function chat(
   const body = (await res.json().catch(() => ({}))) as { content?: string; error?: string };
   if (res.status === 503 && body.error === "missing_key") {
     throw new LlmError("No NVIDIA API key configured.", true);
+  }
+  if (res.status === 401 && body.error === "not_signed_in") {
+    throw new LlmError("You have been signed out. Reload the page and sign in again.");
   }
   if (!res.ok) throw new LlmError(body.error ?? `Request failed (${res.status})`);
   return body.content ?? "";
@@ -112,6 +115,70 @@ const LEVEL_GUIDE: Record<Level, string> = {
 interface TopicGuide {
   readonly ask: string;
   readonly grade: string;
+}
+
+/* Without some outside nudge a model asks its favourite question every
+   time (three fresh DSA sessions all got the same problem). Each request
+   therefore names one area, picked at random, to centre the question on. */
+const FOCUS_AREAS: Readonly<Record<string, readonly string[]>> = {
+  dsa: [
+    "arrays", "strings", "hash maps and sets", "two pointers", "sliding window", "prefix sums",
+    "stacks", "monotonic stacks", "queues and deques", "linked lists", "binary search",
+    "sorting", "recursion", "backtracking", "binary trees", "binary search trees",
+    "heaps and priority queues", "graphs: BFS", "graphs: DFS", "topological sort",
+    "shortest paths (Dijkstra)", "union-find", "tries", "intervals", "greedy algorithms",
+    "1D dynamic programming", "2D dynamic programming", "bit manipulation", "matrix traversal",
+    "design a data structure (e.g. LRU cache)",
+  ],
+  systemdesign: [
+    "caching", "load balancing", "databases: SQL vs NoSQL", "replication", "sharding and partitioning",
+    "consistency and the CAP theorem", "message queues", "rate limiting", "API design",
+    "CDNs", "URL shortener", "notification service", "chat / messaging", "news feed",
+    "search / autocomplete", "file storage (like Dropbox)", "video streaming", "ride sharing",
+    "payments", "distributed job scheduler", "monitoring and logging", "web crawler",
+  ],
+  ml: [
+    "evaluation metrics", "overfitting and regularisation", "bias-variance", "cross-validation",
+    "linear and logistic regression", "decision trees and random forests", "gradient boosting",
+    "clustering", "dimensionality reduction", "feature engineering", "imbalanced data",
+    "data leakage", "neural network training", "optimisers", "model deployment and drift",
+    "recommendation systems", "pandas / NumPy coding",
+  ],
+  ai: [
+    "tokens and tokenisation", "sampling and temperature", "context windows", "embeddings",
+    "vector databases", "RAG pipelines", "chunking and retrieval quality", "prompt engineering",
+    "structured output", "tool / function calling", "agents", "evaluating LLM outputs",
+    "hallucination", "prompt injection and guardrails", "fine-tuning (LoRA, RLHF/DPO)",
+    "latency and cost optimisation", "transformers and attention", "multimodal models",
+  ],
+  csbasics: [
+    "processes vs threads", "CPU scheduling", "memory management and virtual memory",
+    "deadlocks", "synchronisation (locks, semaphores)", "file systems", "OSI and TCP/IP layers",
+    "TCP vs UDP", "HTTP and HTTPS / TLS", "DNS", "what happens when you type a URL",
+    "normalisation", "ACID and transactions", "isolation levels", "indexing",
+    "OOP principles", "SOLID", "design patterns", "compilers and interpreters",
+    "computer architecture basics",
+  ],
+};
+
+const LANGUAGE_ANGLES: readonly string[] = [
+  "core syntax and semantics", "data types and collections", "functions and closures",
+  "error handling", "object-oriented features", "the standard library", "concurrency or async",
+  "memory and performance", "a common pitfall or gotcha", "writing a small function",
+  "debugging a short snippet", "idiomatic style and best practices",
+];
+
+const DATABASE_ANGLES: readonly string[] = [
+  "writing a query", "joins", "aggregation and grouping", "indexing", "data modelling / schema design",
+  "transactions", "performance tuning", "replication and scaling", "a common pitfall",
+  "features specific to this database",
+];
+
+function focusFor(topicId: string): string {
+  const kind = TOPIC_BY_ID.get(topicId)?.kind;
+  const pool =
+    FOCUS_AREAS[topicId] ?? (kind === "database" ? DATABASE_ANGLES : LANGUAGE_ANGLES);
+  return pool[Math.floor(Math.random() * pool.length)]!;
 }
 
 const DEFAULT_GUIDE: TopicGuide = {
@@ -177,6 +244,7 @@ export async function generateQuestion(
 Difficulty: level ${level}/10 (${LEVEL_NAMES[level]}) — ${LEVEL_GUIDE[level]}.
 It must be answerable in a few sentences or at most ~25 lines of code/query (a structured outline for design).
 ${guideFor(topicId).ask}
+For this question, focus on: ${focusFor(topicId)}.
 ${asked ? `Do NOT repeat or closely rephrase any of these already-asked questions:\n${asked}\n` : ""}
 Return JSON exactly in this shape:
 {"type": "concept|coding|query|debugging|design", "title": "short 3-8 word title", "question": "the full question; use \`\`\` fenced code blocks for any code", "hint": "one-sentence nudge that does not give the answer away"}`;
@@ -186,7 +254,7 @@ Return JSON exactly in this shape:
       { role: "system", content: INTERVIEWER },
       { role: "user", content: prompt },
     ],
-    { temperature: 0.8, maxTokens: 700, signal },
+    { temperature: 0.8, maxTokens: 1500, signal },
   );
   const data = extractJSON(raw) as Record<string, unknown>;
   const question = str(data.question);
@@ -228,7 +296,7 @@ Return JSON exactly in this shape:
       { role: "system", content: INTERVIEWER },
       { role: "user", content: prompt },
     ],
-    { temperature: 0.2, maxTokens: 1200, signal },
+    { temperature: 0.2, maxTokens: 2500, signal },
   );
   const data = extractJSON(raw) as Record<string, unknown>;
   const score = Number(data.score);
@@ -279,7 +347,7 @@ Return JSON exactly in this shape:
       { role: "system", content: INTERVIEWER },
       { role: "user", content: prompt },
     ],
-    { temperature: 0.3, maxTokens: 900, signal },
+    { temperature: 0.3, maxTokens: 1500, signal },
   );
   const data = extractJSON(raw) as Record<string, unknown>;
   const list = (v: unknown): string[] =>

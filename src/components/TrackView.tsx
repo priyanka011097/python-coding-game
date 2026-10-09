@@ -1,5 +1,5 @@
 /* =====================================================================
-   TrackView.tsx — one drill track: its progress, its questions, its rules.
+   TrackView.tsx — one drill track: its progress and its questions.
 
    App renders this with key={track.id}, so switching tabs unmounts and
    remounts it. That is why useProgress can read localStorage once in its
@@ -11,7 +11,6 @@ import type { Attempt, Screen, TrackDef } from "../types";
 import { useProgress } from "../hooks/useProgress";
 import { QuestionCard } from "./QuestionCard";
 import { ScoreStrip } from "./ScoreStrip";
-import { RulesPanel } from "./RulesPanel";
 import { Summary } from "./Summary";
 
 interface TrackViewProps {
@@ -111,11 +110,6 @@ export function TrackView({ track }: TrackViewProps) {
         onJump={goTo}
       />
 
-      <RulesPanel title={`${track.label} — rules worth memorising`} rules={track.rules} />
-
-      <p className="saved">
-        Answers are saved in this browser, separately for each tab.
-      </p>
     </>
   );
 }

@@ -6,12 +6,12 @@
    are presentational and report back through callbacks.
    ===================================================================== */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { CardKey, CardsModal, CardsScreen, FlagInfo } from "./types";
 import { DECKS, DECK_BY_NAME, TOTAL_CARDS } from "./data/decks";
 import {
-  KEYS, cardKey, loadJSON, loadString, removeKeys, saveJSON, saveString,
+  KEYS, cardKey, loadJSON, removeKeys, saveJSON,
 } from "./storage";
 import { useSpeech } from "./hooks/useSpeech";
 import { useDuck } from "./hooks/useDuck";
@@ -37,7 +37,14 @@ function useStored<T extends object>(key: string): [T, Dispatch<SetStateAction<T
 
 const FIRST_DECK = DECKS[0]!;
 
-export function CardsMode() {
+interface CardsModeProps {
+  /** Open straight onto this deck (at its saved position), e.g. from Home. */
+  openDeck?: string;
+  /** The signed-in user's first name, for the greeting and the duck. */
+  firstName?: string;
+}
+
+export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
   const [screen, setScreen] = useState<CardsScreen>("home");
   const [subject, setSubject] = useState<string>(FIRST_DECK.name);
   const [index, setIndex] = useState<number>(0);
@@ -45,7 +52,8 @@ export function CardsMode() {
      remounts and its slide-in animation replays. */
   const [visit, setVisit] = useState<number>(0);
   const [modal, setModal] = useState<CardsModal>("none");
-  const [name, setName] = useState<string>(() => loadString(KEYS.name).trim());
+  /* From the Google account; the old "Your name" setting is gone. */
+  const name = firstName?.trim() ?? "";
 
   const [flags, setFlags] = useStored<Flags>(KEYS.flags);
   const [viewed, setViewed] = useStored<Viewed>(KEYS.viewed);
@@ -96,6 +104,16 @@ export function CardsMode() {
     open(s, start, s !== subject);
   };
 
+  /* Once per mount. The ref stops StrictMode's double effect run from
+     counting two navigations (which would trigger the duck). */
+  const openedDeck = useRef<boolean>(false);
+  useEffect(() => {
+    if (openedDeck.current || !openDeck || !DECK_BY_NAME.has(openDeck)) return;
+    openedDeck.current = true;
+    pickTopic(openDeck);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
+  }, []);
+
   const step = useCallback(
     (direction: -1 | 1): void => {
       const n = deck.cards.length;
@@ -145,16 +163,12 @@ export function CardsMode() {
       return next;
     });
 
-  const closeSettings = useCallback((newName: string): void => {
-    setName(newName);
-    saveString(KEYS.name, newName);
-    setModal("none");
-  }, []);
+  const closeSettings = useCallback((): void => setModal("none"), []);
 
   const restart = (): void => {
     if (
       !window.confirm(
-        "This will delete all viewed-card progress, flagged cards, edited answers, and saved positions. Your name is kept. Continue?",
+        "This will delete all viewed-card progress, flagged cards, edited answers, and saved positions. Continue?",
       )
     ) {
       return;
@@ -170,7 +184,7 @@ export function CardsMode() {
   };
 
   /* Keyboard: ← / → move between cards, D flags. Escape closes the
-     flagged list (settings handles its own Escape so it can save the name).
+     flagged list (settings handles its own Escape).
      Typing in an input or textarea is left alone. */
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -271,7 +285,7 @@ export function CardsMode() {
         />
       )}
       {modal === "settings" && (
-        <SettingsModal name={name} onClose={closeSettings} onRestart={restart} />
+        <SettingsModal onClose={closeSettings} onRestart={restart} />
       )}
       {duck && <Duck key={duck.id} duck={duck} />}
     </div>

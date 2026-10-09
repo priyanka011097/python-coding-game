@@ -1,4 +1,4 @@
-import type { Progress, Question, Rule, TrackDef, TrackId } from "../types";
+import type { Question, Rule, TrackDef, TrackId } from "../types";
 import { tsQuestions } from "./tsQuestions";
 import { pyBasics } from "./pyBasics";
 import { pyQuestions } from "./pyQuestions";
@@ -136,17 +136,6 @@ const AI_RULES: readonly Rule[] = [
   },
 ];
 
-/** Marks the first `count` questions as already answered correctly,
- *  using each question's own answer so the blank reads correctly when
- *  you go back to it. */
-function solvedThrough(questions: readonly Question[], count: number): Progress {
-  const seed: Progress = {};
-  for (let index = 0; index < Math.min(count, questions.length); index += 1) {
-    seed[index] = { answer: questions[index]!.accepted[0] ?? "", correct: true };
-  }
-  return seed;
-}
-
 export const TRACKS: readonly TrackDef[] = [
   {
     id: "ts",
@@ -154,8 +143,9 @@ export const TRACKS: readonly TrackDef[] = [
     sub: `${tsQuestions.length} questions`,
     questions: tsQuestions,
     rules: TS_RULES,
-    // Q1–Q39 were worked through before the app existed.
-    seed: solvedThrough(tsQuestions, 39),
+    /* No seed: this track used to start with Q1–Q39 pre-marked as done
+       (worked through before the app existed), which made every new
+       account start at 39 right instead of zero. */
   },
   {
     id: "py",

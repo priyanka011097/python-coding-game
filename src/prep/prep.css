@@ -4,9 +4,8 @@
 
 .pp { max-width: 1080px; margin: 0 auto; padding: 22px 20px 64px; }
 
-.pp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.pp-head { display: flex; align-items: flex-start; justify-content: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .pp-head__actions { display: flex; gap: 8px; }
-.pp-h1 { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -.015em; }
 .pp-h2 { font-size: 18px; font-weight: 600; margin: 0 0 6px; }
 .pp-muted { color: var(--ink-2); font-size: 13.5px; margin: 2px 0 0; }
 .pp-small { color: var(--ink-3); font-size: 12px; margin: 8px 0 0; line-height: 1.5; }
@@ -44,6 +43,29 @@
 
 .pp-title { font-size: 18px; font-weight: 600; margin: 0 0 10px; letter-spacing: -.01em; }
 
+/* Read-aloud: the 🔊 button beside the title, and the question text itself
+   is clickable. A soft accent edge shows which text is being read. */
+.pp-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.pp-title-row .pp-title { min-width: 0; }
+.pp-speak {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 500;
+  border: 1px solid var(--line-2); background: transparent; color: var(--ink-2);
+}
+@media (hover: hover) { .pp-speak:hover { color: var(--ink); background: var(--surface-2); } }
+.pp-speak--on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.pp-speak--on span { animation: ppPulse .9s ease-in-out infinite; }
+@keyframes ppPulse { 50% { transform: scale(1.15); } }
+.pp-spoken {
+  cursor: pointer; border-left: 2px solid transparent;
+  margin-left: -12px; padding-left: 10px; border-radius: 2px;
+  transition: border-color .15s ease;
+}
+@media (hover: hover) { .pp-spoken:hover { border-left-color: var(--line-2); } }
+.pp-spoken--on { border-left-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .pp-speak--on span { animation: none; } }
+
 .pp-rich p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; }
 .pp-rich p:last-child { margin-bottom: 0; }
 .pp-rich code, .pp-hint code {
@@ -67,7 +89,25 @@
   font: inherit; font-size: 13.5px; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px;
 }
 
-.pp-answer-label { margin-top: 20px; }
+.pp-answer-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 20px 0 8px;
+}
+.pp-answer-head .pp-label { margin: 0; }
+.pp-mic {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 500;
+  border: 1px solid var(--line-2); background: transparent; color: var(--ink-2);
+}
+@media (hover: hover) { .pp-mic:hover:not(:disabled) { color: var(--ink); background: var(--surface-2); } }
+.pp-mic:disabled { opacity: .5; cursor: not-allowed; }
+.pp-mic--on { background: var(--fail-soft); border-color: var(--fail-line); color: var(--fail); }
+.pp-mic--on span { animation: ppBlink 1.1s ease-in-out infinite; }
+@keyframes ppBlink { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .pp-mic--on span { animation: none; } }
+/* Words still being recognised: shown live, committed once they settle. */
+.pp-interim { margin: 8px 0 0; font-size: 13.5px; font-style: italic; color: var(--ink-3); }
 .pp-answer {
   width: 100%; min-height: 180px; resize: vertical;
   background: var(--paper); color: var(--ink);

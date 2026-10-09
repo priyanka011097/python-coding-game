@@ -9,7 +9,7 @@
 
 /** The app's sections: fill-in-the-blank drills, flashcards, or the
  *  AI-driven interview practice. */
-export type AppMode = "game" | "cards" | "prep";
+export type AppMode = "home" | "game" | "cards" | "prep";
 
 /** Which drill set is on screen. A union of literals, so a typo is a
  *  compile error rather than a silently empty tab. */
