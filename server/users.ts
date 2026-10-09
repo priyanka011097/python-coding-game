@@ -10,7 +10,7 @@
 
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Mongo } from "./db";
+import type { Mongo } from "./db.js";
 
 export interface UserRecord {
   id: string; // Google's stable account id ("sub")

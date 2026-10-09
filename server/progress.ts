@@ -17,10 +17,10 @@
 
 import type { ServerResponse } from "node:http";
 import type { Connect } from "vite";
-import { readBody } from "./http";
-import type { Mongo } from "./db";
-import { describeDbError } from "./db";
-import type { Sessions } from "./session";
+import { readBody } from "./http.js";
+import type { Mongo } from "./db.js";
+import { describeDbError } from "./db.js";
+import type { Sessions } from "./session.js";
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const MAX_VALUE_CHARS = 2 * 1024 * 1024;

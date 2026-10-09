@@ -17,10 +17,10 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Connect } from "vite";
-import { publicBase } from "./http";
-import type { Sessions } from "./session";
-import { SESSION_COOKIE, STATE_COOKIE, clearCookie, parseCookies, randomToken, setCookie } from "./session";
-import type { UserStore } from "./users";
+import { publicBase } from "./http.js";
+import type { Sessions } from "./session.js";
+import { SESSION_COOKIE, STATE_COOKIE, clearCookie, parseCookies, randomToken, setCookie } from "./session.js";
+import type { UserStore } from "./users.js";
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";

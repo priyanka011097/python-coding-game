@@ -10,7 +10,7 @@
    ===================================================================== */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { buildApi } from "../server/app";
+import { buildApi } from "../server/app.js";
 
 // Built once per warm instance, so the MongoDB connection is reused.
 const chain = buildApi(process.env, process.cwd());

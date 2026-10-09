@@ -11,12 +11,12 @@
 
 import { randomBytes } from "node:crypto";
 import type { Connect, Plugin } from "vite";
-import { googleAuthMiddleware } from "./googleAuth";
-import { nvidiaMiddleware } from "./nvidiaProxy";
-import { progressMiddleware } from "./progress";
-import { Sessions } from "./session";
-import { Mongo } from "./db";
-import { FileUserStore, MongoUserStore } from "./users";
+import { googleAuthMiddleware } from "./googleAuth.js";
+import { nvidiaMiddleware } from "./nvidiaProxy.js";
+import { progressMiddleware } from "./progress.js";
+import { Sessions } from "./session.js";
+import { Mongo } from "./db.js";
+import { FileUserStore, MongoUserStore } from "./users.js";
 
 export type Env = Record<string, string | undefined>;
 
