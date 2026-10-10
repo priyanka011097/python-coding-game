@@ -36,3 +36,22 @@ export const TOTAL_CARDS: number = DECKS.reduce(
   (n, deck) => n + deck.cards.length,
   0,
 );
+
+/** The chosen decks, in the standard order, from their saved JSON.
+ *  Unknown names (a renamed deck) are dropped; nothing valid chosen means
+ *  all decks, so a bad value can never leave the user with no decks. */
+export function chosenDecks(raw: string | null): readonly Deck[] {
+  let names: unknown;
+  try {
+    names = raw ? JSON.parse(raw) : null;
+  } catch {
+    names = null;
+  }
+  if (!Array.isArray(names)) return DECKS;
+  const picked = new Set(names.filter((n): n is string => typeof n === "string"));
+  const decks = DECKS.filter((d) => picked.has(d.name));
+  return decks.length ? decks : DECKS;
+}
+
+export const cardCount = (decks: readonly Deck[]): number =>
+  decks.reduce((n, d) => n + d.cards.length, 0);

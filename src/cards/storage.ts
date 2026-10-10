@@ -13,6 +13,9 @@ export const KEYS = {
   lastIndex: "studycards_lastindex_v1",
   name: "studycards_name_v1",
   readSpeed: "studycards_readspeed_v1",
+  /** The decks the user chose to study: a JSON array of deck names.
+   *  Absent means "all decks", so nobody's view changes until they choose. */
+  decks: "studycards_decks_v1",
 } as const;
 
 export function loadJSON<T extends object>(key: string): T {

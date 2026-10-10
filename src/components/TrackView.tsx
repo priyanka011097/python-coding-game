@@ -9,6 +9,7 @@
 import { useState } from "react";
 import type { Attempt, Screen, TrackDef } from "../types";
 import { useProgress } from "../hooks/useProgress";
+import { bumpDuck } from "../duck/duckBus";
 import { QuestionCard } from "./QuestionCard";
 import { ScoreStrip } from "./ScoreStrip";
 import { Summary } from "./Summary";
@@ -84,7 +85,10 @@ export function TrackView({ track }: TrackViewProps) {
           total={total}
           previous={progress[screen.index]}
           isLast={screen.index === total - 1}
-          onAnswered={(attempt: Attempt) => record(screen.index, attempt)}
+          onAnswered={(attempt: Attempt) => {
+            record(screen.index, attempt);
+            bumpDuck();
+          }}
           onNext={() => advance(screen.index)}
         />
       ) : (

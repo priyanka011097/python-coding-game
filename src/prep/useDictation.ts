@@ -40,6 +40,27 @@ const ERRORS: Record<string, string> = {
   network: "The browser's speech service could not be reached. Check your internet connection.",
 };
 
+/* Phones run recognition one phrase at a time: Android Chrome's
+   continuous mode re-sends earlier words inside every new result. */
+const IS_MOBILE = typeof navigator !== "undefined" && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+
+const norm = (t: string): string =>
+  t.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim();
+
+/** The words in `next` that were not already committed as `prev`.
+ *  Browsers often re-send a finished phrase, or send it again with more
+ *  words on the end ("hello" -> "hello world"); only the new part counts. */
+export function newWords(prev: string, next: string): string {
+  const p = norm(prev);
+  const n = norm(next);
+  if (!n || n === p) return "";
+  if (p && n.startsWith(p + " ")) {
+    // Drop as many leading words of `next` as `prev` had.
+    return next.trim().split(/\s+/).slice(p.split(" ").length).join(" ");
+  }
+  return next.trim();
+}
+
 export interface UseDictation {
   supported: boolean;
   listening: boolean;
@@ -60,6 +81,8 @@ export function useDictation(onFinal: (text: string) => void): UseDictation {
   const wanted = useRef<boolean>(false);
   const onFinalRef = useRef(onFinal);
   onFinalRef.current = onFinal;
+  /** The last phrase committed in this listening run, for de-duplication. */
+  const lastFinal = useRef<string>("");
 
   const stop = useCallback((): void => {
     wanted.current = false;
@@ -74,21 +97,31 @@ export function useDictation(onFinal: (text: string) => void): UseDictation {
     window.speechSynthesis?.cancel();
     const r = new Ctor();
     r.lang = "en-US";
-    r.continuous = true;
+    r.continuous = !IS_MOBILE;
     r.interimResults = true;
+    lastFinal.current = "";
+    /* Which results of the current session are already committed. The
+       whole list is re-scanned on every event (some browsers report
+       resultIndex 0 each time), so this is what stops a phrase being
+       typed again on every update. */
+    let committed = new Set<number>();
     r.onresult = (e) => {
       let pending = "";
-      for (let i = e.resultIndex; i < e.results.length; i += 1) {
+      for (let i = 0; i < e.results.length; i += 1) {
         const result = e.results[i]!;
         const text = result[0].transcript;
         if (result.isFinal) {
-          const clean = text.trim();
-          if (clean) onFinalRef.current(clean);
+          if (committed.has(i)) continue;
+          committed.add(i);
+          const fresh = newWords(lastFinal.current, text);
+          if (text.trim()) lastFinal.current = text.trim();
+          if (fresh) onFinalRef.current(fresh);
         } else {
           pending += text;
         }
       }
-      setInterim(pending.trim());
+      // Live preview of words not committed yet, minus any repeat.
+      setInterim(newWords(lastFinal.current, pending));
     };
     r.onerror = (e) => {
       if (e.error === "no-speech" || e.error === "aborted") return;
@@ -99,6 +132,7 @@ export function useDictation(onFinal: (text: string) => void): UseDictation {
       setInterim("");
       if (wanted.current) {
         try {
+          committed = new Set(); // a new session numbers its results from 0
           r.start();
           return;
         } catch {

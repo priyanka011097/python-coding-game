@@ -7,7 +7,7 @@
    ===================================================================== */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { KEYS, loadNumber, saveString } from "../storage";
+import { KEYS, loadNumber, saveString } from "../cards/storage";
 
 export const DUCK_BIG_EVERY = 10;
 const DUCK_QUICK_EVERY = 2;

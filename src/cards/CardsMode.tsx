@@ -9,18 +9,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { CardKey, CardsModal, CardsScreen, FlagInfo } from "./types";
-import { DECKS, DECK_BY_NAME, TOTAL_CARDS } from "./data/decks";
+import { DECKS, DECK_BY_NAME, cardCount, chosenDecks } from "./data/decks";
 import {
-  KEYS, cardKey, loadJSON, removeKeys, saveJSON,
+  KEYS, cardKey, loadJSON, loadString, removeKeys, saveJSON, saveString,
 } from "./storage";
 import { useSpeech } from "./hooks/useSpeech";
-import { useDuck } from "./hooks/useDuck";
-import { Duck } from "./components/Duck";
+import { bumpDuck, resetDuck } from "../duck/duckBus";
 import { Flashcard } from "./components/Flashcard";
 import { FlaggedModal } from "./components/FlaggedModal";
 import { ProgressBar } from "./components/ProgressBar";
 import { SettingsModal } from "./components/SettingsModal";
 import { TopicGrid } from "./components/TopicGrid";
+import { TopicsModal } from "./components/TopicsModal";
 import "./cards.css";
 
 type Flags = Record<CardKey, FlagInfo>;
@@ -40,7 +40,7 @@ const FIRST_DECK = DECKS[0]!;
 interface CardsModeProps {
   /** Open straight onto this deck (at its saved position), e.g. from Home. */
   openDeck?: string;
-  /** The signed-in user's first name, for the greeting and the duck. */
+  /** The signed-in user's first name, for the greeting. */
   firstName?: string;
 }
 
@@ -59,17 +59,23 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
   const [viewed, setViewed] = useStored<Viewed>(KEYS.viewed);
   const [edits, setEdits] = useStored<Edits>(KEYS.edits);
   const [lastIndex, setLastIndex] = useStored<LastIndex>(KEYS.lastIndex);
+  /* The decks this user chose to study (all of them until they choose). */
+  const [chosen, setChosen] = useState<readonly string[]>(() =>
+    chosenDecks(loadString(KEYS.decks) || null).map((d) => d.name),
+  );
+  const myDecks = DECKS.filter((d) => chosen.includes(d.name));
+  const myTotal = cardCount(myDecks);
 
   const speech = useSpeech();
   const stopSpeech = speech.stop;
-  const { duck, bumpNav, resetNav } = useDuck();
 
   const deck = DECK_BY_NAME.get(subject) ?? FIRST_DECK;
   const card = deck.cards[index] ?? deck.cards[0]!;
   const key = cardKey(subject, index);
   const answer = edits[key] ?? card.a;
 
-  const viewedCount = Object.keys(viewed).length;
+  // Only cards in the chosen decks count towards "viewed".
+  const viewedCount = Object.keys(viewed).filter((k) => chosen.includes(k.slice(0, k.lastIndexOf("::")))).length;
   const flagCount = Object.keys(flags).length;
 
   const viewedIn = (s: string): number => {
@@ -92,9 +98,9 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
       setIndex(nextIndex);
       setVisit((v) => v + 1);
       setScreen("card");
-      if (bump) bumpNav(name);
+      if (bump) bumpDuck();
     },
-    [bumpNav, name, stopSpeech],
+    [stopSpeech],
   );
 
   const pickTopic = (s: string): void => {
@@ -178,7 +184,7 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
     setFlags({});
     setEdits({});
     setLastIndex({});
-    resetNav();
+    resetDuck();
     setIndex(0);
     setModal("none");
   };
@@ -210,6 +216,13 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
           <div className="home-header">
             <div className="home-header-top">
               <h2 className="home-title">{name ? `Hi, ${name}!` : "Interview Study Cards"}</h2>
+              <div className="home-header-actions">
+              <button type="button" className="topics-btn" onClick={() => setModal("topics")}>
+                Choose topics
+                <span className="topics-btn__count">
+                  {myDecks.length}/{DECKS.length}
+                </span>
+              </button>
               <button
                 type="button"
                 className="settings-btn"
@@ -219,11 +232,12 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
               >
                 ⚙️
               </button>
+              </div>
             </div>
             <p className="home-subtitle">Pick a topic to begin</p>
-            <ProgressBar done={viewedCount} total={TOTAL_CARDS} />
+            <ProgressBar done={viewedCount} total={myTotal} />
           </div>
-          <TopicGrid decks={DECKS} viewedIn={viewedIn} onPick={pickTopic} />
+          <TopicGrid decks={myDecks} viewedIn={viewedIn} onPick={pickTopic} />
         </div>
       ) : (
         <div className="screen">
@@ -248,7 +262,7 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
                 {index + 1} / {deck.cards.length}
               </span>
             </div>
-            <ProgressBar done={viewedCount} total={TOTAL_CARDS} />
+            <ProgressBar done={viewedCount} total={myTotal} />
           </div>
 
           <div className="sc-main">
@@ -284,10 +298,22 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
           onClose={() => setModal("none")}
         />
       )}
+      {modal === "topics" && (
+        <TopicsModal
+          decks={DECKS}
+          chosen={chosen}
+          viewedIn={viewedIn}
+          onClose={() => setModal("none")}
+          onSave={(names) => {
+            setChosen(names);
+            saveString(KEYS.decks, JSON.stringify(names));
+            setModal("none");
+          }}
+        />
+      )}
       {modal === "settings" && (
         <SettingsModal onClose={closeSettings} onRestart={restart} />
       )}
-      {duck && <Duck key={duck.id} duck={duck} />}
     </div>
   );
 }

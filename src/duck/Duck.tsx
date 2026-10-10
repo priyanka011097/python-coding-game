@@ -1,5 +1,5 @@
-import type { DuckShow } from "../hooks/useDuck";
-import { DUCK_BIG_EVERY } from "../hooks/useDuck";
+import type { DuckShow } from "./useDuck";
+import { DUCK_BIG_EVERY } from "./useDuck";
 
 interface DuckProps {
   duck: DuckShow;

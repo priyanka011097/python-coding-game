@@ -24,6 +24,10 @@ function GoogleLogo() {
 const wrongHost =
   window.location.protocol === "http:" && window.location.hostname !== "localhost";
 
+/** Come back to the page you asked for (e.g. /admin) after signing in. */
+const here = window.location.pathname;
+const signInHref = here && here !== "/" ? `/auth/google?next=${encodeURIComponent(here)}` : "/auth/google";
+
 export function SignIn({ error, callbackUrl }: SignInProps) {
   return (
     <div className="signin">
@@ -44,7 +48,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           </p>
         )}
         {/* A plain link, not fetch: the browser must follow Google's redirects. */}
-        <a className="google-btn" href="/auth/google">
+        <a className="google-btn" href={signInHref}>
           <GoogleLogo />
           Continue with Google
         </a>

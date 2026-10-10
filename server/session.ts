@@ -11,6 +11,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 
 export const SESSION_COOKIE = "ip_session";
 export const STATE_COOKIE = "ip_oauth_state";
+/** Where to land after signing in, e.g. /admin. */
+export const NEXT_COOKIE = "ip_oauth_next";
 const SESSION_DAYS = 30;
 
 export interface SessionUser {

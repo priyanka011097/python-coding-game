@@ -10,7 +10,7 @@
 import type { TrackDef, TrackId } from "../types";
 import { TRACKS } from "../data/tracks";
 import type { Progress } from "../types";
-import { DECKS, TOTAL_CARDS } from "../cards/data/decks";
+import { cardCount, chosenDecks } from "../cards/data/decks";
 import { KEYS } from "../cards/storage";
 import type { HistoryItem, Level } from "../prep/types";
 import { STORAGE_KEY as PREP_KEY, parsePrepState } from "../prep/PrepMode";
@@ -122,12 +122,17 @@ function countBySubject(map: Record<string, unknown>): Map<string, number> {
 }
 
 function summariseCards(read: ReadKey): CardsSummary {
-  const viewedMap = json<Record<string, 1>>(read, KEYS.viewed);
-  const flagMap = json<Record<string, unknown>>(read, KEYS.flags);
-  const edits = json<Record<string, string>>(read, KEYS.edits);
+  // Only the decks this user chose to study (all, until they choose).
+  const decksChosen = chosenDecks(read(KEYS.decks));
+  const inChosen = new Set(decksChosen.map((d) => d.name));
+  const ofChosen = <T,>(map: Record<string, T>): Record<string, T> =>
+    Object.fromEntries(Object.entries(map).filter(([k]) => inChosen.has(k.slice(0, k.lastIndexOf("::")))));
+  const viewedMap = ofChosen(json<Record<string, 1>>(read, KEYS.viewed));
+  const flagMap = ofChosen(json<Record<string, unknown>>(read, KEYS.flags));
+  const edits = ofChosen(json<Record<string, string>>(read, KEYS.edits));
   const viewedBy = countBySubject(viewedMap);
   const flaggedBy = countBySubject(flagMap);
-  const decks = DECKS.map((d) => ({
+  const decks = decksChosen.map((d) => ({
     name: d.name,
     icon: d.icon,
     viewed: Math.min(viewedBy.get(d.name) ?? 0, d.cards.length),
@@ -136,7 +141,7 @@ function summariseCards(read: ReadKey): CardsSummary {
   }));
   return {
     viewed: decks.reduce((n, d) => n + d.viewed, 0),
-    total: TOTAL_CARDS,
+    total: cardCount(decksChosen),
     flagged: Object.keys(flagMap).length,
     edited: Object.keys(edits).length,
     decks,

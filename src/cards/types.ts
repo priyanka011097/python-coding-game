@@ -30,4 +30,4 @@ export type CardKey = string;
 
 export type CardsScreen = "home" | "card";
 
-export type CardsModal = "none" | "flagged" | "settings";
+export type CardsModal = "none" | "flagged" | "settings" | "topics";

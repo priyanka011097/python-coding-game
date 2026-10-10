@@ -19,7 +19,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Connect } from "vite";
 import { publicBase } from "./http.js";
 import type { Sessions } from "./session.js";
-import { SESSION_COOKIE, STATE_COOKIE, clearCookie, parseCookies, randomToken, setCookie } from "./session.js";
+import { NEXT_COOKIE, SESSION_COOKIE, STATE_COOKIE, clearCookie, parseCookies, randomToken, setCookie } from "./session.js";
 import type { UserStore } from "./users.js";
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -112,6 +112,11 @@ export function googleAuthMiddleware(opts: GoogleAuthOptions): Connect.NextHandl
       if (!opts.appUrl && PRIVATE_IP.test(host)) return fail("private_ip");
       const state = randomToken();
       setCookie(res, STATE_COOKIE, state, { maxAgeSeconds: 600, secure });
+      // Only a same-site path, never another site ("//evil.com" or a full URL).
+      const next = url.searchParams.get("next");
+      if (next && /^\/[A-Za-z0-9/_-]*$/.test(next) && !next.startsWith("//")) {
+        setCookie(res, NEXT_COOKIE, next, { maxAgeSeconds: 600, secure });
+      }
       const params = new URLSearchParams({
         client_id: opts.clientId!,
         redirect_uri: callbackUrl,
@@ -172,7 +177,10 @@ export function googleAuthMiddleware(opts: GoogleAuthOptions): Connect.NextHandl
             id: user.id, email: user.email, name: user.name, picture: user.picture,
           });
           setCookie(res, SESSION_COOKIE, session.value, { maxAgeSeconds: session.maxAgeSeconds, secure });
-          redirect(res, isNew ? "/?welcome=new" : "/");
+          const next = parseCookies(req)[NEXT_COOKIE];
+          clearCookie(res, NEXT_COOKIE, secure);
+          const landing = next && /^\/[A-Za-z0-9/_-]*$/.test(next) && !next.startsWith("//") ? next : "/";
+          redirect(res, isNew ? `${landing}?welcome=new` : landing);
         } catch (err) {
           // A failed database write surfaces as its own error, not as Google's.
           fail(err instanceof Error && /mongo/i.test(err.name) ? "db_unavailable" : "google_unreachable");

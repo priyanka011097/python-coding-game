@@ -17,6 +17,7 @@ import { TopicPicker } from "./components/TopicPicker";
 import { QuestionView } from "./components/QuestionView";
 import { FeedbackView } from "./components/FeedbackView";
 import { ReadinessPanel } from "./components/ReadinessPanel";
+import { bumpDuck } from "../duck/duckBus";
 import "./prep.css";
 
 export const STORAGE_KEY = "prep_session_v1";
@@ -130,6 +131,7 @@ export function PrepMode() {
       turn: prev.turn + 1,
       screen: { phase: "feedback", item },
     }));
+    bumpDuck();
   };
 
   const getReport = async (): Promise<void> => {

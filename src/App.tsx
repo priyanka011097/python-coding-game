@@ -14,6 +14,7 @@ import type { HomeTarget } from "./home/HomeMode";
 import { SignIn } from "./auth/SignIn";
 import { UserMenu } from "./auth/UserMenu";
 import { ThemeToggle } from "./theme/ThemeToggle";
+import { DuckHost } from "./duck/DuckHost";
 import { forget, hydrate, trySaveAll } from "./sync/progressSync";
 
 /* The flashcard decks are ~1,100 cards of text. Loading that mode lazily
@@ -101,7 +102,19 @@ interface MainAppProps {
 
 function MainApp({ user, welcome, onLogout }: MainAppProps) {
   // Every visit starts on the Home dashboard.
-  const [mode, setMode] = useState<AppMode>("home");
+  // Every visit starts on Home, except the /admin address (admins only).
+  const [mode, setMode] = useState<AppMode>(() =>
+    window.location.pathname.replace(/\/+$/, "") === "/admin" && user?.isAdmin ? "admin" : "home",
+  );
+
+  /* Keep the address bar in step, so /admin can be bookmarked and shared
+     between admins. Everything else lives at /. */
+  useEffect(() => {
+    const path = mode === "admin" ? "/admin" : "/";
+    if (window.location.pathname !== path) {
+      window.history.replaceState(null, "", path + window.location.hash);
+    }
+  }, [mode]);
   const [trackId, setTrackId] = useState<TrackId>("py");
   /** A deck chosen on Home; Study Cards opens straight onto it. */
   const [deckToOpen, setDeckToOpen] = useState<string | undefined>(undefined);
@@ -180,6 +193,8 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
           </div>
         </div>
       </header>
+
+      <DuckHost firstName={user ? (user.name.split(" ")[0] ?? "") : ""} />
 
       {showWelcome && user && (
         <div className="welcome" role="status">
