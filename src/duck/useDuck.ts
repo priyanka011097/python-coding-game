@@ -13,6 +13,7 @@ export const DUCK_BIG_EVERY = 10;
 const DUCK_QUICK_EVERY = 2;
 const BIG_MS = 3700;
 const QUICK_MS = 3050;
+const FLOAT_MS = 3600;
 
 const CORNERS = ["br", "bl", "tr", "tl"] as const;
 export type Corner = (typeof CORNERS)[number];
@@ -43,7 +44,38 @@ const MOTIVATIONS = [
 const pick = <T,>(items: readonly T[]): T =>
   items[Math.floor(Math.random() * items.length)]!;
 
+/** Encouragement for the random ducks that pop up anywhere on screen. */
+export const ENCOURAGEMENTS = [
+  "Keep up the good work!",
+  "Keep going, you're doing great!",
+  "You're doing better than you think!",
+  "Keep shining, you're doing amazing!",
+  "Don't stop now, you're getting there!",
+  "Keep pushing, you've got this!",
+  "You're on the right track!",
+  "Keep it up, superstar!",
+  "One step closer every day!",
+  "Keep growing, keep glowing!",
+  "You're making great progress!",
+  "Stay consistent, stay unstoppable!",
+  "Keep showing up for yourself!",
+  "You're doing an amazing job!",
+  "Keep moving forward, no matter what!",
+  "Trust the process, keep going!",
+  "Your efforts are paying off!",
+  "Keep believing in yourself!",
+  "You're closer than you think!",
+  "Keep winning, one day at a time!",
+  "Proud of how far you've come!",
+  "Keep doing your thing!",
+  "You're absolutely crushing it!",
+  "Stay strong, keep moving!",
+  "Great things take time, keep going!",
+] as const;
+
+/** Progress ducks mix the name-based cheers with the encouragements. */
 function motivation(name: string): string {
+  if (Math.random() < 0.5) return pick(ENCOURAGEMENTS);
   const template = pick(MOTIVATIONS);
   return name ? template.replace("{name}", name) : template.replace(/,?\s*\{name\}/, "");
 }
@@ -53,12 +85,17 @@ function motivation(name: string): string {
  *  CSS animation plays from the start. */
 export type DuckShow =
   | { id: number; mode: "big"; /** Replaces "Quack! +10". */ text?: string }
-  | { id: number; mode: "quick"; corner: Corner; text: string };
+  | { id: number; mode: "quick"; corner: Corner; text: string }
+  /** Pops up at a random spot on screen (x, y in % of the viewport). */
+  | { id: number; mode: "float"; x: number; y: number; text: string };
 
 export interface UseDuck {
   duck: DuckShow | null;
   bumpNav: (name: string) => void;
   resetNav: () => void;
+  /** A random duck at a random spot, unless one is already showing.
+   *  Returns whether it showed. */
+  cheer: () => boolean;
 }
 
 export function useDuck(): UseDuck {
@@ -107,5 +144,25 @@ export function useDuck(): UseDuck {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  return { duck, bumpNav, resetNav };
+  const showing = useRef<boolean>(false);
+  showing.current = duck !== null;
+
+  const cheer = useCallback((): boolean => {
+    if (showing.current) return false;
+    nextId.current += 1;
+    show(
+      {
+        id: nextId.current,
+        mode: "float",
+        // Kept clear of the edges so the bubble is never cut off.
+        x: 6 + Math.random() * 70,
+        y: 14 + Math.random() * 62,
+        text: pick(ENCOURAGEMENTS),
+      },
+      FLOAT_MS,
+    );
+    return true;
+  }, [show]);
+
+  return { duck, bumpNav, resetNav, cheer };
 }

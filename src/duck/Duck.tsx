@@ -9,10 +9,18 @@ export function Duck({ duck }: DuckProps) {
   const className =
     duck.mode === "big"
       ? "duck-celebration show"
-      : `duck-celebration show-quick corner-${duck.corner}`;
+      : duck.mode === "float"
+        ? "duck-celebration show-float"
+        : `duck-celebration show-quick corner-${duck.corner}`;
+  /* Capped so the duck and its widest bubble (240px) always fit on screen,
+     however narrow the window. */
+  const style =
+    duck.mode === "float"
+      ? { left: `max(8px, min(${duck.x}vw, calc(100vw - 252px)))`, top: `max(70px, min(${duck.y}vh, calc(100vh - 150px)))` }
+      : undefined;
 
   return (
-    <div className={className} aria-hidden="true">
+    <div className={className} style={style} aria-hidden="true">
       <div className="duck-bubble">
         {duck.mode === "big" && duck.text ? (
           <span className="duck-bubble-text">{duck.text}</span>
