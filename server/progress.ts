@@ -27,7 +27,7 @@ const MAX_VALUE_CHARS = 2 * 1024 * 1024;
 
 /** Only the app's own storage keys are accepted. Mirrors src/sync/keys.ts. */
 const KEY_PATTERN =
-  /^(type-check-progress:[a-z]+|type-check-seeded-v2:[a-z]+|studycards_[a-z]+_v1|prep_session_v1|interview-prep-mode)$/;
+  /^(type-check-progress:[a-z]+|type-check-seeded-v2:[a-z]+|studycards_[a-z]+_v1|prep_session_v1|interview-prep-mode|home_[a-z]+_v1)$/;
 
 interface ProgressDoc {
   userId: string;

@@ -14,7 +14,9 @@ export function Duck({ duck }: DuckProps) {
   return (
     <div className={className} aria-hidden="true">
       <div className="duck-bubble">
-        {duck.mode === "big" ? (
+        {duck.mode === "big" && duck.text ? (
+          <span className="duck-bubble-text">{duck.text}</span>
+        ) : duck.mode === "big" ? (
           <>
             <span className="duck-bubble-text">Quack!</span>
             <span className="duck-bubble-count">+{DUCK_BIG_EVERY}</span>

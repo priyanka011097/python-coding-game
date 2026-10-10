@@ -59,10 +59,16 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
   const [viewed, setViewed] = useStored<Viewed>(KEYS.viewed);
   const [edits, setEdits] = useStored<Edits>(KEYS.edits);
   const [lastIndex, setLastIndex] = useStored<LastIndex>(KEYS.lastIndex);
-  /* The decks this user chose to study (all of them until they choose). */
-  const [chosen, setChosen] = useState<readonly string[]>(() =>
-    chosenDecks(loadString(KEYS.decks) || null).map((d) => d.name),
-  );
+  /* The decks this user chose to study. Never chosen: the decks they have
+     already studied; nothing studied either means "pick your decks first"
+     (the same rule Home uses). */
+  const [chosen, setChosen] = useState<readonly string[]>(() => {
+    const raw = loadString(KEYS.decks) || null;
+    if (raw) return chosenDecks(raw).map((d) => d.name);
+    const studied = new Set(Object.keys(loadJSON<Viewed>(KEYS.viewed)).map((k) => k.slice(0, k.lastIndexOf("::"))));
+    return DECKS.filter((d) => studied.has(d.name)).map((d) => d.name);
+  });
+  const needsChoice = chosen.length === 0;
   const myDecks = DECKS.filter((d) => chosen.includes(d.name));
   const myTotal = cardCount(myDecks);
 
@@ -234,10 +240,28 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
               </button>
               </div>
             </div>
-            <p className="home-subtitle">Pick a topic to begin</p>
-            <ProgressBar done={viewedCount} total={myTotal} />
+            {!needsChoice && (
+              <>
+                <p className="home-subtitle">Pick a topic to begin</p>
+                <ProgressBar done={viewedCount} total={myTotal} />
+              </>
+            )}
           </div>
-          <TopicGrid decks={myDecks} viewedIn={viewedIn} onPick={pickTopic} />
+          {needsChoice ? (
+            <div className="pick-first">
+              <span className="pick-first__icon" aria-hidden="true">🧭</span>
+              <h3>Pick your decks first</h3>
+              <p>
+                Choose what you want to study from 11 decks: React, JavaScript &amp; TypeScript, backend,
+                databases, system design, AI, DevOps, security, testing, DSA and Python coding problems.
+              </p>
+              <button type="button" className="pick-first__btn" onClick={() => setModal("topics")}>
+                Choose decks
+              </button>
+            </div>
+          ) : (
+            <TopicGrid decks={myDecks} viewedIn={viewedIn} onPick={pickTopic} />
+          )}
         </div>
       ) : (
         <div className="screen">

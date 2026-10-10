@@ -52,7 +52,7 @@ function motivation(name: string): string {
  *  changes on every appearance so React remounts the element and the
  *  CSS animation plays from the start. */
 export type DuckShow =
-  | { id: number; mode: "big" }
+  | { id: number; mode: "big"; /** Replaces "Quack! +10". */ text?: string }
   | { id: number; mode: "quick"; corner: Corner; text: string };
 
 export interface UseDuck {

@@ -72,6 +72,19 @@
   background: var(--accent-soft); color: var(--accent-ink);
 }
 
+.sc .pick-first {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  padding: 36px 24px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+}
+.sc .pick-first__icon { font-size: 34px; line-height: 1; }
+.sc .pick-first h3 { margin: 0; font-size: 19px; }
+.sc .pick-first p { margin: 0 0 6px; max-width: 54ch; color: var(--ink-2); font-size: 14.5px; line-height: 1.6; }
+.sc .pick-first__btn {
+  padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); font: inherit; font-size: 14.5px; font-weight: 600;
+}
+@media (hover: hover) { .sc .pick-first__btn:hover { filter: brightness(1.08); } }
+
 /* ---------- choose topics ---------- */
 .sc .topics-quick { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .sc .topics-link {

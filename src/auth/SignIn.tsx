@@ -7,6 +7,7 @@
    ===================================================================== */
 
 import { ThemeToggle } from "../theme/ThemeToggle";
+import { LandingDuck } from "./LandingDuck";
 import "./landing.css";
 
 interface SignInProps {
@@ -168,7 +169,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           <QuestionPreview />
         </section>
 
-        <section className="lp-section" aria-labelledby="lp-three">
+        <section className="lp-section" aria-labelledby="lp-three" data-duck="Three ways to practise. Quack!">
           <h2 id="lp-three" className="lp-h2">Three ways to practise</h2>
           <p className="lp-sub">Use one, or all three. Everything feeds the same dashboard.</p>
           <div className="lp-cards">
@@ -186,7 +187,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           </p>
         </section>
 
-        <section className="lp-section" aria-labelledby="lp-how">
+        <section className="lp-section" aria-labelledby="lp-how" data-duck="Just 3 steps to get going!">
           <h2 id="lp-how" className="lp-h2">How it works</h2>
           <ol className="lp-steps">
             <li>
@@ -213,7 +214,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           </ol>
         </section>
 
-        <section className="lp-section" aria-labelledby="lp-more">
+        <section className="lp-section" aria-labelledby="lp-more" data-duck="I cheer you on too!">
           <h2 id="lp-more" className="lp-h2">Built for real practice</h2>
           <div className="lp-extras">
             {EXTRAS.map(([icon, title, body]) => (
@@ -228,13 +229,19 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           </div>
         </section>
 
-        <section className="lp-final">
+        <section className="lp-final" data-duck-big="Quack! Let's go!">
           <h2 className="lp-h2">Your next interview starts with one question.</h2>
           <GoogleButton />
         </section>
       </main>
 
-      <footer className="lp-foot">Interview Prep · Coding Game · Study Cards · AI Interview Prep</footer>
+      <LandingDuck />
+      <footer className="lp-foot">
+        A product from{" "}
+        <a href="https://buildwithpriyanka.in" target="_blank" rel="noopener">
+          buildwithpriyanka.in
+        </a>
+      </footer>
     </div>
   );
 }

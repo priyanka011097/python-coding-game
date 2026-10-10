@@ -10,7 +10,8 @@
 import type { TrackDef, TrackId } from "../types";
 import { TRACKS } from "../data/tracks";
 import type { Progress } from "../types";
-import { cardCount, chosenDecks } from "../cards/data/decks";
+import { DECKS, cardCount, chosenDecks } from "../cards/data/decks";
+import { TRACKS_KEY, chosenTrackIds } from "./subjects";
 import { KEYS } from "../cards/storage";
 import type { HistoryItem, Level } from "../prep/types";
 import { STORAGE_KEY as PREP_KEY, parsePrepState } from "../prep/PrepMode";
@@ -105,6 +106,8 @@ export interface DeckSummary {
 }
 
 export interface CardsSummary {
+  /** Nothing chosen and nothing studied yet: Home asks the user to choose. */
+  readonly needsChoice: boolean;
   readonly viewed: number;
   readonly total: number;
   readonly flagged: number;
@@ -122,8 +125,11 @@ function countBySubject(map: Record<string, unknown>): Map<string, number> {
 }
 
 function summariseCards(read: ReadKey): CardsSummary {
-  // Only the decks this user chose to study (all, until they choose).
-  const decksChosen = chosenDecks(read(KEYS.decks));
+  /* The decks this user chose. Never chosen: the decks already studied,
+     so Home does not list eleven empty bars at a brand-new user. */
+  const raw = read(KEYS.decks);
+  const studied = new Set(Object.keys(json<Record<string, 1>>(read, KEYS.viewed)).map((k) => k.slice(0, k.lastIndexOf("::"))));
+  const decksChosen = raw ? chosenDecks(raw) : DECKS.filter((d) => studied.has(d.name));
   const inChosen = new Set(decksChosen.map((d) => d.name));
   const ofChosen = <T,>(map: Record<string, T>): Record<string, T> =>
     Object.fromEntries(Object.entries(map).filter(([k]) => inChosen.has(k.slice(0, k.lastIndexOf("::")))));
@@ -140,8 +146,9 @@ function summariseCards(read: ReadKey): CardsSummary {
     flagged: flaggedBy.get(d.name) ?? 0,
   }));
   return {
+    needsChoice: decksChosen.length === 0,
     viewed: decks.reduce((n, d) => n + d.viewed, 0),
-    total: cardCount(decksChosen),
+    total: cardCount(decksChosen.length ? decksChosen : DECKS),
     flagged: Object.keys(flagMap).length,
     edited: Object.keys(edits).length,
     decks,
@@ -159,6 +166,9 @@ export interface PrepTopicSummary {
 }
 
 export interface PrepSummary {
+  readonly needsChoice: boolean;
+  /** The topics selected in Interview Prep (for the chooser). */
+  readonly topicIds: readonly string[];
   readonly readiness: number;
   readonly answered: number;
   readonly avgScore: number | null;
@@ -175,6 +185,8 @@ function summarisePrep(read: ReadKey): PrepSummary {
   // The current selection first, then anything practised earlier.
   const ids = [...new Set([...state.topicIds, ...history.map((h) => h.question.topicId)])];
   return {
+    needsChoice: ids.length === 0,
+    topicIds: state.topicIds,
     readiness: overallReadiness(history, state.topicIds),
     answered: history.length,
     avgScore: average(history),
@@ -195,18 +207,30 @@ function summarisePrep(read: ReadKey): PrepSummary {
 /* ---------- everything ---------- */
 
 export interface HomeSummary {
-  readonly game: { readonly right: number; readonly attempted: number; readonly total: number; readonly tracks: readonly TrackSummary[] };
+  readonly game: {
+    readonly needsChoice: boolean;
+    readonly right: number;
+    readonly attempted: number;
+    readonly total: number;
+    /** The chosen tracks, or (never chosen) the ones already practised. */
+    readonly tracks: readonly TrackSummary[];
+  };
   readonly cards: CardsSummary;
   readonly prep: PrepSummary;
 }
 
 export function summarise(read: ReadKey = fromThisBrowser): HomeSummary {
-  const tracks = TRACKS.map((t) => summariseTrack(t, read));
+  const all = TRACKS.map((t) => summariseTrack(t, read));
+  const chosen = chosenTrackIds(read(TRACKS_KEY));
+  // Never chosen: anything already practised still shows, nothing else.
+  const tracks = chosen ? all.filter((t) => chosen.includes(t.id)) : all.filter((t) => t.right + t.wrong > 0);
+  const counted = tracks.length ? tracks : all;
   return {
     game: {
-      right: tracks.reduce((n, t) => n + t.right, 0),
-      attempted: tracks.reduce((n, t) => n + t.right + t.wrong, 0),
-      total: tracks.reduce((n, t) => n + t.total, 0),
+      needsChoice: tracks.length === 0,
+      right: counted.reduce((n, t) => n + t.right, 0),
+      attempted: counted.reduce((n, t) => n + t.right + t.wrong, 0),
+      total: counted.reduce((n, t) => n + t.total, 0),
       tracks,
     },
     cards: summariseCards(read),
