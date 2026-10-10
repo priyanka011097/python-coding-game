@@ -44,8 +44,14 @@ export interface Tally {
 
 export const pct = ({ done, total }: Tally): number => (total ? Math.round((done / total) * 100) : 0);
 
-/** For display: some progress never reads as "0%" (3 of 1,103 is "<1%"). */
-export const pctLabel = (t: Tally): string => (t.done > 0 && pct(t) === 0 ? "<1%" : `${pct(t)}%`);
+/** For display. Under 1% shows one decimal (3 of 1,103 is "0.3%"), and
+ *  any progress at all is at least "0.1%", so it never reads as zero. */
+export function pctLabel(t: Tally): string {
+  if (!t.total || t.done <= 0) return "0%";
+  const exact = (t.done / t.total) * 100;
+  if (exact >= 1) return `${Math.round(exact)}%`;
+  return `${Math.max(0.1, Math.round(exact * 10) / 10)}%`;
+}
 
 /* ---------- Coding Game ---------- */
 

@@ -222,6 +222,7 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
           <div className="home-header">
             <div className="home-header-top">
               <h2 className="home-title">{name ? `Hi, ${name}!` : "Interview Study Cards"}</h2>
+              {!needsChoice && (
               <div className="home-header-actions">
               <button type="button" className="topics-btn" onClick={() => setModal("topics")}>
                 Choose topics
@@ -239,6 +240,7 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
                 ⚙️
               </button>
               </div>
+              )}
             </div>
             {!needsChoice && (
               <>
@@ -248,17 +250,18 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
             )}
           </div>
           {needsChoice ? (
-            <div className="pick-first">
-              <span className="pick-first__icon" aria-hidden="true">🧭</span>
-              <h3>Pick your decks first</h3>
-              <p>
-                Choose what you want to study from 11 decks: React, JavaScript &amp; TypeScript, backend,
-                databases, system design, AI, DevOps, security, testing, DSA and Python coding problems.
-              </p>
-              <button type="button" className="pick-first__btn" onClick={() => setModal("topics")}>
-                Choose decks
-              </button>
-            </div>
+            /* First visit: choosing decks is the page itself. */
+            <TopicsModal
+              inline
+              decks={DECKS}
+              chosen={[]}
+              viewedIn={viewedIn}
+              onClose={() => undefined}
+              onSave={(names) => {
+                setChosen(names);
+                saveString(KEYS.decks, JSON.stringify(names));
+              }}
+            />
           ) : (
             <TopicGrid decks={myDecks} viewedIn={viewedIn} onPick={pickTopic} />
           )}

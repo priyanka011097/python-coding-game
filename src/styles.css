@@ -160,6 +160,29 @@ header {
   color: var(--ink-3); font-weight: 400; letter-spacing: .01em;
 }
 
+/* ---------- Coding Game: first-visit track picker ---------- */
+.tp { padding-top: 34px; }
+.tp-title { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+.tp-sub { margin: 6px 0 22px; color: var(--ink-2); font-size: 14.5px; max-width: 60ch; }
+.tp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.tp-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left;
+  padding: 20px; border-radius: 14px; cursor: pointer; font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+  transition: border-color .15s ease, transform .15s ease;
+}
+@media (hover: hover) { .tp-card:hover { border-color: var(--accent); transform: translateY(-2px); } }
+.tp-card__icon { font-size: 30px; line-height: 1; margin-bottom: 6px; }
+.tp-card__name { font-size: 16px; font-weight: 600; }
+.tp-card__count { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--accent-ink); }
+.tp-card__blurb { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); flex: 1; }
+.tp-card__go { margin-top: 8px; font-size: 13.5px; font-weight: 600; color: var(--accent-ink); }
+@media (max-width: 760px) {
+  .tp { padding-top: 20px; }
+  .tp-title { font-size: 22px; }
+  .tp-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* ---------- status row ---------- */
 .statusrow {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;

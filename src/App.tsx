@@ -11,6 +11,8 @@ import { TrackView } from "./components/TrackView";
 import { takeAuthNotice, useAuth } from "./auth/useAuth";
 import type { AuthUser } from "./auth/useAuth";
 import type { HomeTarget } from "./home/HomeMode";
+import { initialTrack, rememberTrack } from "./home/subjects";
+import { TrackPicker } from "./components/TrackPicker";
 import { SignIn } from "./auth/SignIn";
 import { UserMenu } from "./auth/UserMenu";
 import { ThemeToggle } from "./theme/ThemeToggle";
@@ -115,7 +117,12 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
       window.history.replaceState(null, "", path + window.location.hash);
     }
   }, [mode]);
-  const [trackId, setTrackId] = useState<TrackId>("py");
+  /* null = Coding Game has never been opened: show the track picker. */
+  const [trackId, setTrackIdState] = useState<TrackId | null>(initialTrack);
+  const setTrackId = (id: TrackId): void => {
+    rememberTrack(id);
+    setTrackIdState(id);
+  };
   /** A deck chosen on Home; Study Cards opens straight onto it. */
   const [deckToOpen, setDeckToOpen] = useState<string | undefined>(undefined);
 
@@ -126,7 +133,7 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
     window.scrollTo({ top: 0 });
   };
   const [showWelcome, setShowWelcome] = useState<boolean>(welcome && user !== null);
-  const track = TRACK_BY_ID[trackId];
+  const track = trackId ? TRACK_BY_ID[trackId] : null;
 
   useEffect(() => {
     if (!showWelcome) return;
@@ -171,9 +178,8 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
               </button>
             ))}
           </div>
-          {mode === "game" && (
-            <Tabs tracks={TRACKS} value={trackId} onChange={setTrackId} />
-          )}
+          {/* Track tabs once a track is picked; the first visit shows the picker. */}
+          {mode === "game" && trackId && <Tabs tracks={TRACKS} value={trackId} onChange={setTrackId} />}
           <div className="bar__end">
             {/* Admin has no button: admins open it at /admin. */}
             <ThemeToggle />
@@ -197,7 +203,7 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
         <div className="wrap">
           {/* key={trackId} remounts the whole view on a tab change, so each
               track's progress and position start clean. */}
-          <TrackView key={trackId} track={track} />
+          {track ? <TrackView key={track.id} track={track} /> : <TrackPicker tracks={TRACKS} onPick={setTrackId} />}
         </div>
       ) : (
         <Suspense fallback={null}>

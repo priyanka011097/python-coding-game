@@ -103,7 +103,6 @@ function Stat({ label, value, detail, onClick, start }: {
           <span className="hm-start">
             <span className="hm-start__icon" aria-hidden="true">{start.icon}</span>
             {start.cta}
-            <span aria-hidden="true">→</span>
           </span>
         ) : (
           <span className="hm-start hm-start--static">
@@ -162,6 +161,29 @@ function TrackRow({ track, onOpen }: { track: TrackSummary; onOpen?: () => void 
   );
 }
 
+/** A section not started yet: just a blurred stand-in of its progress box
+ *  (fake bars, decoration only). The tiles above are the way in. */
+function Locked({ title, rows, wide = false }: { title: string; rows: readonly string[]; wide?: boolean }) {
+  return (
+    <section className={`hm-card hm-locked${wide ? " hm-card--wide" : ""}`} aria-label={`${title}: not started yet`}>
+      <div className="hm-card__head">
+        <h2>{title}</h2>
+      </div>
+      <div className={`hm-locked__preview${wide ? " hm-locked__preview--grid" : ""}`} aria-hidden="true">
+        {rows.map((name, i) => (
+          <div key={name} className="hm-locked__row">
+            <span>{name}</span>
+            <span className="hm-locked__num">{[12, 30, 7, 21, 16, 9][i % 6]}%</span>
+            <div className="hm-meter">
+              <div className="hm-meter__fill" style={{ width: `${[38, 64, 22, 51, 45, 30][i % 6]}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ---------- the page ---------- */
 
 export function HomeMode({ firstName, onOpen, summary, title, subtitle }: HomeModeProps) {
@@ -173,47 +195,30 @@ export function HomeMode({ firstName, onOpen, summary, title, subtitle }: HomeMo
   const s = summary ?? local!;
   const go = (target: HomeTarget) => (onOpen ? () => onOpen(target) : undefined);
   const { game, cards, prep } = s;
-  /** Your own Home can choose subjects; the admin's read-only view cannot. */
+  /** Your own Home can change subjects; the admin's read-only view cannot. */
   const editable = !summary;
-  const [chooser, setChooser] = useState<SubjectSection | "all" | null>(null);
-  const nothingChosen = game.needsChoice && cards.needsChoice && prep.needsChoice;
+  const [chooser, setChooser] = useState<SubjectSection | null>(null);
+  /* A section unlocks once something has been done in it. Until then its
+     box is a blurred, locked preview and the tile above is the way in. */
+  const lockedGame = game.attempted === 0;
+  const lockedCards = cards.viewed === 0;
+  const lockedPrep = prep.answered === 0;
 
-  const choose = (section: SubjectSection | "all", label: string) =>
-    editable ? (
-      <button type="button" className="hm-btn" onClick={() => setChooser(section)}>
-        {label}
-      </button>
-    ) : null;
   const edit = (section: SubjectSection) =>
     editable ? (
       <button type="button" className="hm-link" onClick={() => setChooser(section)}>
         Edit
       </button>
     ) : null;
-  /* Chosen but untouched: a friendly start instead of rows of empty bars. */
-  const startHere = (icon: string, cta: string, what: string, names: readonly string[], target: HomeTarget) => (
-    <div className="hm-fresh">
-      {onOpen ? (
-        <button type="button" className="hm-start hm-start--button" onClick={() => onOpen(target)}>
-          <span className="hm-start__icon" aria-hidden="true">{icon}</span>
-          {cta}
-          <span aria-hidden="true">→</span>
-        </button>
-      ) : (
-        <span className="hm-start hm-start--static">
-          <span className="hm-start__icon" aria-hidden="true">{icon}</span>
-          Not started yet
-        </span>
-      )}
-      <p className="hm-line">
-        {what}: <b>{names.join(", ")}</b>
-      </p>
-    </div>
-  );
-  const pickPrompt = (section: SubjectSection, text: string, label: string) => (
+  // Unlocked but every practised subject was un-chosen: ask to choose again.
+  const pickPrompt = (section: SubjectSection, text: string) => (
     <div className="hm-pickme">
-      <p>{editable ? text : "Not chosen yet."}</p>
-      {choose(section, label)}
+      <p>{editable ? text : "Nothing chosen."}</p>
+      {editable && (
+        <button type="button" className="hm-btn" onClick={() => setChooser(section)}>
+          Choose
+        </button>
+      )}
     </div>
   );
 
@@ -260,129 +265,106 @@ export function HomeMode({ firstName, onOpen, summary, title, subtitle }: HomeMo
         />
       </div>
 
-      {nothingChosen ? (
-        <section className="hm-card hm-welcome">
-          <span className="hm-welcome__icon" aria-hidden="true">🧭</span>
-          <h2>{editable ? "Pick your subjects" : "No subjects chosen yet"}</h2>
-          <p>
-            {editable
-              ? "Tell us what your next interview is about: Coding Game tracks, Study Cards decks and Interview Prep topics. Your progress for them will show up right here."
-              : "This user has not chosen any subjects or started practising yet."}
-          </p>
-          {choose("all", "Choose your subjects")}
-        </section>
-      ) : (
       <div className="hm-grid">
         {/* Coding Game */}
-        <section className="hm-card">
-          <div className="hm-card__head">
-            <h2>Coding Game {!game.needsChoice && edit("game")}</h2>
-            {!game.needsChoice && game.attempted > 0 && (
+        {lockedGame ? (
+          <Locked
+            title="Coding Game"
+            rows={["TypeScript + React", "Python — zero to DSA", "Data + AI"]}
+          />
+        ) : (
+          <section className="hm-card">
+            <div className="hm-card__head">
+              <h2>Coding Game {edit("game")}</h2>
               <span className="hm-legend">
                 <span><i className="hm-dot hm-dot--pass" /> right</span>
                 <span><i className="hm-dot hm-dot--fail" /> missed</span>
                 <span><i className="hm-dot" /> not tried</span>
               </span>
+            </div>
+            {game.needsChoice ? (
+              pickPrompt("game", "None of your practised tracks are chosen. Choose the tracks to show here.")
+            ) : (
+              <ul className="hm-list">
+                {game.tracks.map((t) => (
+                  <TrackRow key={t.id} track={t} onOpen={go({ mode: "game", track: t.id })} />
+                ))}
+              </ul>
             )}
-          </div>
-          {game.needsChoice ? (
-            pickPrompt("game", "Choose the tracks you want to drill: TypeScript + React, Python or Data + AI.", "Choose tracks")
-          ) : game.attempted === 0 ? (
-            startHere("🐣", "Answer your first question", "Your tracks", game.tracks.map((t) => t.label), {
-              mode: "game",
-              track: game.tracks[0]?.id,
-            })
-          ) : (
-            <ul className="hm-list">
-              {game.tracks.map((t) => (
-                <TrackRow key={t.id} track={t} onOpen={go({ mode: "game", track: t.id })} />
-              ))}
-            </ul>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* Interview Prep */}
-        <section className="hm-card">
-          <div className="hm-card__head">
-            <h2>Interview Prep {!prep.needsChoice && edit("prep")}</h2>
-            {prep.lastAt !== null && <span className="hm-muted">Last practised {ago(prep.lastAt)}</span>}
-          </div>
-          {prep.needsChoice ? (
-            pickPrompt("prep", "Choose the topics your interview is on, from DSA and System Design to 30 languages and databases.", "Choose topics")
-          ) : prep.answered === 0 ? (
-            <div className="hm-empty">
-              <p className="hm-line">
-                Your topics: <b>{prep.topics.map((t) => topicLabel(t.id)).join(", ")}</b>
-              </p>
-              <p>Practise with the AI interviewer: one question at a time, simple to hard, with a score and a model answer each time.</p>
-              {onOpen && (
-                <button type="button" className="hm-btn" onClick={() => onOpen({ mode: "prep" })}>
-                  Start your first interview
-                </button>
-              )}
+        {lockedPrep ? (
+          <Locked
+            title="Interview Prep"
+            rows={["DSA", "System Design", "Python"]}
+          />
+        ) : (
+          <section className="hm-card">
+            <div className="hm-card__head">
+              <h2>Interview Prep {edit("prep")}</h2>
+              {prep.lastAt !== null && <span className="hm-muted">Last practised {ago(prep.lastAt)}</span>}
             </div>
-          ) : (
-            <>
-              <p className="hm-line">
-                <b>{prep.answered}</b> answered · average <b>{prep.avgScore ?? 0}</b>/10
-              </p>
-              <ul className="hm-list">
-                {prep.topics.map((t) => (
-                  <li key={t.id}>
-                    <Row className="hm-row" onClick={go({ mode: "prep" })}>
-                      <span className="hm-row__name">{topicLabel(t.id)}</span>
-                      <span className="hm-row__nums">
-                        L{t.level} {LEVEL_NAMES[t.level]} · {t.answered} answered
-                        {t.avgScore !== null && ` · avg ${t.avgScore}`} · <b>{t.readiness}%</b> ready
+            <p className="hm-line">
+              <b>{prep.answered}</b> answered · average <b>{prep.avgScore ?? 0}</b>/10
+            </p>
+            <ul className="hm-list">
+              {prep.topics.map((t) => (
+                <li key={t.id}>
+                  <Row className="hm-row" onClick={go({ mode: "prep" })}>
+                    <span className="hm-row__name">{topicLabel(t.id)}</span>
+                    <span className="hm-row__nums">
+                      L{t.level} {LEVEL_NAMES[t.level]} · {t.answered} answered
+                      {t.avgScore !== null && ` · avg ${t.avgScore}`} · <b>{t.readiness}%</b> ready
+                    </span>
+                    <Meter done={t.readiness} total={100} label={`${topicLabel(t.id)} readiness`} />
+                  </Row>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Study Cards */}
+        {lockedCards ? (
+          <Locked
+            title="Study Cards"
+            wide
+            rows={["React & Frontend", "System Design", "Databases", "DSA", "Security", "Testing"]}
+          />
+        ) : (
+          <section className="hm-card hm-card--wide">
+            <div className="hm-card__head">
+              <h2>Study Cards {edit("cards")}</h2>
+              <span className="hm-muted">
+                🚩 {cards.flagged} flagged · ✏️ {cards.edited} edited
+              </span>
+            </div>
+            {cards.needsChoice ? (
+              pickPrompt("cards", "None of your studied decks are chosen. Choose the decks to show here.")
+            ) : (
+              <ul className="hm-decks">
+                {cards.decks.map((d) => (
+                  <li key={d.name}>
+                    <Row className="hm-row" onClick={go({ mode: "cards", deck: d.name })}>
+                      <span className="hm-row__name">
+                        <span className="hm-icon" aria-hidden="true">{d.icon}</span>
+                        {d.name}
                       </span>
-                      <Meter done={t.readiness} total={100} label={`${topicLabel(t.id)} readiness`} />
+                      <span className="hm-row__nums">
+                        {d.viewed}/{d.total}
+                        {d.flagged > 0 && ` · ${d.flagged} flagged`}
+                      </span>
+                      <Meter done={d.viewed} total={d.total} label={`${d.name} viewed`} />
                     </Row>
                   </li>
                 ))}
               </ul>
-            </>
-          )}
-        </section>
-
-        {/* Study Cards */}
-        <section className="hm-card hm-card--wide">
-          <div className="hm-card__head">
-            <h2>Study Cards {!cards.needsChoice && edit("cards")}</h2>
-            {!cards.needsChoice && cards.viewed > 0 && (
-              <span className="hm-muted">
-                🚩 {cards.flagged} flagged · ✏️ {cards.edited} edited
-              </span>
             )}
-          </div>
-          {cards.needsChoice ? (
-            pickPrompt("cards", "Choose the flashcard decks you want to study: React, system design, databases, DSA and more.", "Choose decks")
-          ) : cards.viewed === 0 ? (
-            startHere("🌱", "Flip your first card", "Your decks", cards.decks.map((d) => d.name), {
-              mode: "cards",
-              deck: cards.decks[0]?.name,
-            })
-          ) : (
-          <ul className="hm-decks">
-            {cards.decks.map((d) => (
-              <li key={d.name}>
-                <Row className="hm-row" onClick={go({ mode: "cards", deck: d.name })}>
-                  <span className="hm-row__name">
-                    <span className="hm-icon" aria-hidden="true">{d.icon}</span>
-                    {d.name}
-                  </span>
-                  <span className="hm-row__nums">
-                    {d.viewed}/{d.total}
-                    {d.flagged > 0 && ` · ${d.flagged} flagged`}
-                  </span>
-                  <Meter done={d.viewed} total={d.total} label={`${d.name} viewed`} />
-                </Row>
-              </li>
-            ))}
-          </ul>
-          )}
-        </section>
+          </section>
+        )}
       </div>
-      )}
 
       {chooser && (
         <SubjectsModal
@@ -391,7 +373,7 @@ export function HomeMode({ firstName, onOpen, summary, title, subtitle }: HomeMo
             decks: cards.decks.map((d) => d.name),
             prepTopics: prep.topics.map((t) => t.id),
           }}
-          focus={chooser === "all" ? undefined : chooser}
+          focus={chooser}
           onClose={() => setChooser(null)}
           onSave={(choice) => {
             saveSubjects(choice);

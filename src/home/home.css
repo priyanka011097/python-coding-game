@@ -23,28 +23,30 @@
 .hm-stat__value { font-size: 32px; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
 .hm-stat__detail { font-size: 12.5px; color: var(--ink-3); }
 
-/* Before any progress: a friendly start pill instead of "0%". */
+/* Before any progress: a friendly start pill instead of "0%". The icon is a
+   big round badge that overlaps the pill's left end, larger than the pill. */
 .hm-start {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
-  margin: 4px 0 2px; padding: 8px 14px 8px 10px; border-radius: 99px;
-  background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 600;
-  transition: filter .15s ease, transform .15s ease;
+  position: relative; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  margin: 12px 0 10px 6px; min-height: 44px; padding: 10px 22px 10px 64px; border-radius: 99px;
+  background: var(--accent); color: var(--on-accent); font-size: 14.5px; font-weight: 600;
+  transition: filter .15s ease;
 }
 .hm-start__icon {
-  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
-  background: var(--surface); font-size: 15px; line-height: 1;
+  position: absolute; left: -6px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%;
+  background: var(--surface); border: 3px solid var(--accent);
+  box-shadow: 0 4px 12px -4px rgba(16, 24, 40, .35);
+  font-size: 32px; line-height: 1;
 }
 @media (hover: hover) { .hm-stat--start:hover .hm-start:not(.hm-start--static) { filter: brightness(1.08); } }
 .hm-stat--start:hover .hm-start__icon { animation: hmWiggle .6s ease-in-out; }
-@keyframes hmWiggle { 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
-.hm-start--static { background: var(--surface-2); color: var(--ink-2); }
-.hm-start--button { border: none; cursor: pointer; font-family: inherit; }
-@media (hover: hover) {
-  .hm-start--button:hover { filter: brightness(1.08); }
-  .hm-start--button:hover .hm-start__icon { animation: hmWiggle .6s ease-in-out; }
+@keyframes hmWiggle {
+  25% { transform: translateY(-50%) rotate(-12deg); }
+  75% { transform: translateY(-50%) rotate(12deg); }
 }
-.hm-fresh { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 6px 0 10px; }
-.hm-fresh .hm-line { margin: 0; line-height: 1.55; }
+.hm-start--static { background: var(--surface-2); color: var(--ink-2); }
+.hm-start--static .hm-start__icon { border-color: var(--line-2); }
+
 @media (prefers-reduced-motion: reduce) { .hm-stat--start:hover .hm-start__icon { animation: none; } }
 
 /* ---------- section cards ---------- */
@@ -123,10 +125,16 @@
 .hm-pickme { padding: 6px 0 10px; }
 .hm-pickme p { margin: 0 0 12px; color: var(--ink-2); font-size: 14px; line-height: 1.55; }
 
-.hm-welcome { text-align: center; padding: 34px 24px 30px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.hm-welcome__icon { font-size: 34px; line-height: 1; }
-.hm-welcome h2 { margin: 0; font-size: 20px; }
-.hm-welcome p { margin: 0 0 8px; max-width: 56ch; color: var(--ink-2); font-size: 14.5px; line-height: 1.6; }
+/* ---------- locked sections ---------- */
+.hm-locked { position: relative; overflow: hidden; }
+.hm-locked__preview {
+  display: grid; gap: 14px; padding: 6px 0 10px;
+  filter: blur(5px) saturate(.8); opacity: .75; user-select: none; pointer-events: none;
+}
+.hm-locked__preview--grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); column-gap: 18px; }
+.hm-locked__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; font-size: 14px; font-weight: 500; }
+.hm-locked__row .hm-meter { grid-column: 1 / -1; }
+.hm-locked__num { font-size: 12.5px; color: var(--ink-2); }
 
 .hm-modal {
   position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;

@@ -11,18 +11,21 @@ interface TopicsModalProps {
   viewedIn: (deck: string) => number;
   onSave: (names: string[]) => void;
   onClose: () => void;
+  /** Render as the page itself (Study Cards' first visit), not a pop-up. */
+  inline?: boolean;
 }
 
-export function TopicsModal({ decks, chosen, viewedIn, onSave, onClose }: TopicsModalProps) {
+export function TopicsModal({ decks, chosen, viewedIn, onSave, onClose, inline = false }: TopicsModalProps) {
   const [picked, setPicked] = useState<Set<string>>(() => new Set(chosen));
 
   useEffect(() => {
+    if (inline) return;
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [inline, onClose]);
 
   const toggle = (name: string): void =>
     setPicked((prev) => {
@@ -34,18 +37,13 @@ export function TopicsModal({ decks, chosen, viewedIn, onSave, onClose }: Topics
 
   const cards = decks.filter((d) => picked.has(d.name)).reduce((n, d) => n + d.cards.length, 0);
 
-  return (
-    <div
-      className="modal"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="modal-content" role="dialog" aria-modal="true" aria-label="Choose topics">
-        <h2>Choose topics</h2>
+  const content = (
+    <>
+        <h2>{inline ? "Choose your topics" : "Choose topics"}</h2>
         <p className="modal-subtitle">
-          Pick what you are studying. Only these decks show here and on your Home dashboard. Progress in
-          other decks is kept.
+          {inline
+            ? "Pick the decks you want to study. Next time Study Cards opens straight to them, and you can change them any time with Choose topics."
+            : "Pick what you are studying. Only these decks show here and on your Home dashboard. Progress in other decks is kept."}
         </p>
 
         <div className="topics-quick">
@@ -79,9 +77,11 @@ export function TopicsModal({ decks, chosen, viewedIn, onSave, onClose }: Topics
         </ul>
 
         <div className="modal-actions">
-          <button type="button" className="close-btn" onClick={onClose}>
-            Cancel
-          </button>
+          {!inline && (
+            <button type="button" className="close-btn" onClick={onClose}>
+              Cancel
+            </button>
+          )}
           <button
             type="button"
             className="close-btn topics-save"
@@ -89,9 +89,28 @@ export function TopicsModal({ decks, chosen, viewedIn, onSave, onClose }: Topics
             title={picked.size === 0 ? "Choose at least one deck" : undefined}
             onClick={() => onSave(decks.filter((d) => picked.has(d.name)).map((d) => d.name))}
           >
-            {picked.size === 0 ? "Choose at least one" : "Save"}
+            {picked.size === 0
+              ? "Choose at least one"
+              : inline
+                ? `Start studying (${picked.size} ${picked.size === 1 ? "deck" : "decks"}) →`
+                : "Save"}
           </button>
         </div>
+    </>
+  );
+
+  if (inline) {
+    return <section className="topics-page" aria-label="Choose your topics">{content}</section>;
+  }
+  return (
+    <div
+      className="modal"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="modal-content" role="dialog" aria-modal="true" aria-label="Choose topics">
+        {content}
       </div>
     </div>
   );

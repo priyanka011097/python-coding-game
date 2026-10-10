@@ -18,6 +18,41 @@ import { STORAGE_KEY as PREP_KEY, parsePrepState } from "../prep/PrepMode";
 import { TOPIC_BY_ID } from "../prep/topics";
 
 export const TRACKS_KEY = "home_tracks_v1";
+/** The Coding Game track opened last; Coding Game reopens it. */
+export const LAST_TRACK_KEY = "home_lasttrack_v1";
+
+const isTrack = (v: unknown): v is TrackId => TRACKS.some((t) => t.id === v);
+
+/** Where Coding Game should open, or null for "show the track picker":
+ *  the track used last, else one already practised, else nothing. */
+export function initialTrack(): TrackId | null {
+  try {
+    const last = window.localStorage.getItem(LAST_TRACK_KEY);
+    if (isTrack(last)) return last;
+    const practised = TRACKS.find((t) => {
+      const raw = window.localStorage.getItem(`type-check-progress:${t.id}`);
+      return raw !== null && raw !== "{}";
+    });
+    return practised?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Opening a track makes it the default next time and one of the chosen
+ *  Coding Game subjects shown on Home. */
+export function rememberTrack(id: TrackId): void {
+  try {
+    const ls = window.localStorage;
+    ls.setItem(LAST_TRACK_KEY, id);
+    const chosen = chosenTrackIds(ls.getItem(TRACKS_KEY)) ?? [];
+    if (!chosen.includes(id)) {
+      ls.setItem(TRACKS_KEY, JSON.stringify(TRACKS.map((t) => t.id).filter((t) => t === id || chosen.includes(t))));
+    }
+  } catch {
+    /* private browsing — still opens for this visit */
+  }
+}
 
 /** The chosen Coding Game tracks, or null if the user never chose. */
 export function chosenTrackIds(raw: string | null): TrackId[] | null {
