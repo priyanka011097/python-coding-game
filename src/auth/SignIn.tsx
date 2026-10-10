@@ -1,7 +1,13 @@
-import { ThemeToggle } from "../theme/ThemeToggle";
+/* =====================================================================
+   SignIn.tsx — the landing page everyone sees before signing in.
 
-/* The screen shown to signed-out visitors. One button covers both sign-up
-   and log-in: the first Google sign-in creates the account. */
+   Explains what the product is (three ways to practise, one dashboard)
+   and offers one action: Continue with Google, which both signs up new
+   people and logs existing ones in.
+   ===================================================================== */
+
+import { ThemeToggle } from "../theme/ThemeToggle";
+import "./landing.css";
 
 interface SignInProps {
   error: string | null;
@@ -28,37 +34,207 @@ const wrongHost =
 const here = window.location.pathname;
 const signInHref = here && here !== "/" ? `/auth/google?next=${encodeURIComponent(here)}` : "/auth/google";
 
+function GoogleButton({ size = "lg" }: { size?: "lg" | "sm" }) {
+  // A plain link, not fetch: the browser must follow Google's redirects.
+  return (
+    <a className={`google-btn google-btn--${size}`} href={signInHref}>
+      <GoogleLogo />
+      Continue with Google
+    </a>
+  );
+}
+
+const SECTIONS = [
+  {
+    icon: "⌨️",
+    name: "Coding Game",
+    stat: "357 questions",
+    body: "Fill in the blank in real code, one question at a time. Three tracks: TypeScript + React, Python from zero to DSA, and Data + AI. Every answer explains the why.",
+  },
+  {
+    icon: "🗂️",
+    name: "Study Cards",
+    stat: "1,103 cards · 11 decks",
+    body: "Interview questions with clear answers across React, JS/TS, backend, databases, system design, AI, DevOps, security, testing, DSA and 100 Python coding problems.",
+  },
+  {
+    icon: "🎙️",
+    name: "Interview Prep",
+    stat: "35 topics · AI interviewer",
+    body: "An AI interviewer asks one question at a time, from basics to expert. Each answer gets a score out of 10, feedback and a model answer, and the next question adapts.",
+  },
+] as const;
+
+const EXTRAS = [
+  ["📊", "One dashboard", "See progress in every section and topic at a glance, and jump straight back in."],
+  ["🎯", "Readiness score", "Know when you are interview-ready: it rewards acing hard questions in every topic."],
+  ["🔊", "Listen and speak", "Hear questions read aloud and answer by voice instead of typing."],
+  ["☁️", "Saved to your account", "Pick up on any device. Progress syncs when you sign in."],
+  ["🧩", "Choose your topics", "Focus on the decks and languages your next interview is about."],
+  ["🦆", "A duck that cheers", "Small wins add up, and a duck pops in to celebrate them."],
+] as const;
+
+const TOPICS =
+  "DSA · System Design · Machine Learning · GenAI & LLMs · CS Fundamentals · Python · JavaScript · TypeScript · React · Node.js · Java · Go · Rust · C++ · SQL · PostgreSQL · MongoDB · Redis · and more";
+
+/** A static picture of a Coding Game question, so the page shows the
+ *  product rather than describing it. */
+function QuestionPreview() {
+  return (
+    <div className="lp-preview" aria-hidden="true">
+      <div className="lp-preview__top">
+        <span className="lp-chip lp-chip--accent">Hashing</span>
+        <span className="lp-chip">Python</span>
+        <span className="lp-preview__qno">87 / 250</span>
+      </div>
+      <p className="lp-preview__ask">Count how often each word appears, in one line.</p>
+      <pre className="lp-preview__code">
+        <span className="lp-k">from</span> collections <span className="lp-k">import</span> Counter{"\n"}
+        {"\n"}
+        counts = <span className="lp-blank">Counter</span>(words){"\n"}
+        counts.most_common(<span className="lp-n">3</span>)
+      </pre>
+      <div className="lp-preview__verdict">
+        <span className="lp-preview__mark">✓</span> Correct, next question…
+      </div>
+      <div className="lp-preview__ai">
+        <span className="lp-preview__score">
+          9<small>/10</small>
+        </span>
+        <span>
+          <b>AI interviewer:</b> clear and correct. Mention that it runs in O(n).
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function SignIn({ error, callbackUrl }: SignInProps) {
   return (
-    <div className="signin">
-      <ThemeToggle className="theme-toggle--corner" />
-      <div className="signin__card">
-        <h1 className="signin__title">Sign in to continue</h1>
-        <p className="signin__sub">
-          Coding Game, Study Cards and AI Interview Prep. New here? Signing in with Google
-          creates your account.
-        </p>
-        {wrongHost && (
-          <p className="signin__note">
-            Google sign-in only works at{" "}
-            <a href={`http://localhost:${window.location.port || "5173"}/`}>
-              localhost:{window.location.port || "5173"}
-            </a>{" "}
-            on this computer, not at {window.location.hostname}.
-          </p>
-        )}
-        {/* A plain link, not fetch: the browser must follow Google's redirects. */}
-        <a className="google-btn" href={signInHref}>
-          <GoogleLogo />
-          Continue with Google
-        </a>
-        {error && (
-          <div className="signin__error" role="alert">
-            <p>{error}</p>
-            {error.includes("redirect") && callbackUrl && <code>{callbackUrl}</code>}
+    <div className="lp">
+      <header className="lp-nav">
+        <span className="lp-brand">
+          <span className="lp-brand__mark" aria-hidden="true">IP</span>
+          Interview Prep
+        </span>
+        <div className="lp-nav__end">
+          <ThemeToggle />
+          <a className="lp-signin" href={signInHref}>
+            Sign in
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section className="lp-hero">
+          <div className="lp-hero__text">
+            <p className="lp-eyebrow">For developers preparing for technical interviews</p>
+            <h1 className="lp-title">
+              Be ready for your next interview, <span className="lp-accent">one question at a time.</span>
+            </h1>
+            <p className="lp-lede">
+              Drill real code, review 1,100+ interview flashcards, and practise with an AI interviewer that
+              gets harder as you get better. Then see exactly how ready you are.
+            </p>
+
+            {wrongHost && (
+              <p className="lp-note">
+                Google sign-in only works at{" "}
+                <a href={`http://localhost:${window.location.port || "5173"}/`}>
+                  localhost:{window.location.port || "5173"}
+                </a>{" "}
+                on this computer, not at {window.location.hostname}.
+              </p>
+            )}
+
+            <div className="lp-cta">
+              <GoogleButton />
+              <span className="lp-cta__hint">Free. New here? Signing in creates your account.</span>
+            </div>
+
+            {error && (
+              <div className="lp-error" role="alert">
+                <p>{error}</p>
+                {error.includes("redirect") && callbackUrl && <code>{callbackUrl}</code>}
+              </div>
+            )}
+
+            <ul className="lp-proof">
+              <li><b>357</b> coding questions</li>
+              <li><b>1,103</b> flashcards</li>
+              <li><b>35</b> interview topics</li>
+            </ul>
           </div>
-        )}
-      </div>
+          <QuestionPreview />
+        </section>
+
+        <section className="lp-section" aria-labelledby="lp-three">
+          <h2 id="lp-three" className="lp-h2">Three ways to practise</h2>
+          <p className="lp-sub">Use one, or all three. Everything feeds the same dashboard.</p>
+          <div className="lp-cards">
+            {SECTIONS.map((s) => (
+              <article key={s.name} className="lp-card">
+                <span className="lp-card__icon" aria-hidden="true">{s.icon}</span>
+                <h3>{s.name}</h3>
+                <p className="lp-card__stat">{s.stat}</p>
+                <p>{s.body}</p>
+              </article>
+            ))}
+          </div>
+          <p className="lp-topics">
+            <span>Interview Prep covers</span> {TOPICS}
+          </p>
+        </section>
+
+        <section className="lp-section" aria-labelledby="lp-how">
+          <h2 id="lp-how" className="lp-h2">How it works</h2>
+          <ol className="lp-steps">
+            <li>
+              <span className="lp-step__n">1</span>
+              <div>
+                <h3>Sign in with Google</h3>
+                <p>No forms or passwords. Your account is created the first time.</p>
+              </div>
+            </li>
+            <li>
+              <span className="lp-step__n">2</span>
+              <div>
+                <h3>Pick what your interview is on</h3>
+                <p>Choose languages, databases and topics. Start at your level: beginner, intermediate or advanced.</p>
+              </div>
+            </li>
+            <li>
+              <span className="lp-step__n">3</span>
+              <div>
+                <h3>Practise, then check your readiness</h3>
+                <p>Questions step up from simple to hard. Your dashboard shows what is solid and what to work on.</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section className="lp-section" aria-labelledby="lp-more">
+          <h2 id="lp-more" className="lp-h2">Built for real practice</h2>
+          <div className="lp-extras">
+            {EXTRAS.map(([icon, title, body]) => (
+              <div key={title} className="lp-extra">
+                <span className="lp-extra__icon" aria-hidden="true">{icon}</span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="lp-final">
+          <h2 className="lp-h2">Your next interview starts with one question.</h2>
+          <GoogleButton />
+        </section>
+      </main>
+
+      <footer className="lp-foot">Interview Prep · Coding Game · Study Cards · AI Interview Prep</footer>
     </div>
   );
 }

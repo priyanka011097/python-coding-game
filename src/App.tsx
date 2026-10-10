@@ -175,19 +175,7 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
             <Tabs tracks={TRACKS} value={trackId} onChange={setTrackId} />
           )}
           <div className="bar__end">
-            {user?.isAdmin && (
-              <button
-                type="button"
-                className={`admin-btn${mode === "admin" ? " admin-btn--on" : ""}`}
-                aria-current={mode === "admin" ? "page" : undefined}
-                onClick={() => {
-                  setDeckToOpen(undefined);
-                  setMode("admin");
-                }}
-              >
-                Admin
-              </button>
-            )}
+            {/* Admin has no button: admins open it at /admin. */}
             <ThemeToggle />
             {user && <UserMenu user={user} onLogout={onLogout} />}
           </div>
