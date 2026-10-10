@@ -24,6 +24,9 @@ const CardsMode = lazy(() =>
 const PrepMode = lazy(() =>
   import("./prep/PrepMode").then((m) => ({ default: m.PrepMode })),
 );
+const AdminMode = lazy(() =>
+  import("./admin/AdminMode").then((m) => ({ default: m.AdminMode })),
+);
 const HomeMode = lazy(() =>
   import("./home/HomeMode").then((m) => ({ default: m.HomeMode })),
 );
@@ -159,6 +162,19 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
             <Tabs tracks={TRACKS} value={trackId} onChange={setTrackId} />
           )}
           <div className="bar__end">
+            {user?.isAdmin && (
+              <button
+                type="button"
+                className={`admin-btn${mode === "admin" ? " admin-btn--on" : ""}`}
+                aria-current={mode === "admin" ? "page" : undefined}
+                onClick={() => {
+                  setDeckToOpen(undefined);
+                  setMode("admin");
+                }}
+              >
+                Admin
+              </button>
+            )}
             <ThemeToggle />
             {user && <UserMenu user={user} onLogout={onLogout} />}
           </div>
@@ -193,6 +209,7 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
             />
           )}
           {mode === "prep" && <PrepMode />}
+          {mode === "admin" && user?.isAdmin && <AdminMode />}
         </Suspense>
       )}
     </>

@@ -1,20 +1,40 @@
 /* =====================================================================
    progressData.ts — summarises saved progress for the Home dashboard.
 
-   Pure reads of the same localStorage the three modes write (already
-   synced from the account by the time Home mounts). Each summary applies
-   the same rules its mode does — e.g. the TypeScript track's seed — so
-   Home never disagrees with what the mode itself shows.
+   Reads the same saved keys the three modes write. By default from this
+   browser (already synced from the account by the time Home mounts); the
+   admin page passes another user's saved copy instead. Each summary
+   applies the same rules its mode does, so they never disagree.
    ===================================================================== */
 
 import type { TrackDef, TrackId } from "../types";
 import { TRACKS } from "../data/tracks";
-import { initialProgress } from "../hooks/useProgress";
+import type { Progress } from "../types";
 import { DECKS, TOTAL_CARDS } from "../cards/data/decks";
-import { KEYS, loadJSON } from "../cards/storage";
+import { KEYS } from "../cards/storage";
 import type { HistoryItem, Level } from "../prep/types";
-import { loadState } from "../prep/PrepMode";
+import { STORAGE_KEY as PREP_KEY, parsePrepState } from "../prep/PrepMode";
 import { overallReadiness, topicReadiness } from "../prep/readiness";
+
+/** Where saved values come from: a key -> its stored string (or null). */
+export type ReadKey = (key: string) => string | null;
+
+const fromThisBrowser: ReadKey = (key) => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+function json<T extends object>(read: ReadKey, key: string): T {
+  try {
+    const raw = read(key);
+    return raw ? (JSON.parse(raw) as T) : ({} as T);
+  } catch {
+    return {} as T;
+  }
+}
 
 export interface Tally {
   readonly done: number;
@@ -45,8 +65,9 @@ export interface TrackSummary {
   readonly topics: readonly TopicTally[];
 }
 
-function summariseTrack(track: TrackDef): TrackSummary {
-  const progress = initialProgress(track.id, track.seed);
+function summariseTrack(track: TrackDef, read: ReadKey): TrackSummary {
+  // Same key and shape useProgress writes (no track has a seed any more).
+  const progress = json<Progress>(read, `type-check-progress:${track.id}`);
   const byTopic = new Map<string, { right: number; wrong: number; total: number }>();
   let right = 0;
   let wrong = 0;
@@ -100,10 +121,10 @@ function countBySubject(map: Record<string, unknown>): Map<string, number> {
   return counts;
 }
 
-function summariseCards(): CardsSummary {
-  const viewedMap = loadJSON<Record<string, 1>>(KEYS.viewed);
-  const flagMap = loadJSON<Record<string, unknown>>(KEYS.flags);
-  const edits = loadJSON<Record<string, string>>(KEYS.edits);
+function summariseCards(read: ReadKey): CardsSummary {
+  const viewedMap = json<Record<string, 1>>(read, KEYS.viewed);
+  const flagMap = json<Record<string, unknown>>(read, KEYS.flags);
+  const edits = json<Record<string, string>>(read, KEYS.edits);
   const viewedBy = countBySubject(viewedMap);
   const flaggedBy = countBySubject(flagMap);
   const decks = DECKS.map((d) => ({
@@ -143,8 +164,8 @@ export interface PrepSummary {
 const average = (items: readonly HistoryItem[]): number | null =>
   items.length ? Math.round((items.reduce((n, h) => n + h.evaluation.score, 0) / items.length) * 10) / 10 : null;
 
-function summarisePrep(): PrepSummary {
-  const state = loadState();
+function summarisePrep(read: ReadKey): PrepSummary {
+  const state = parsePrepState(read(PREP_KEY));
   const { history } = state;
   // The current selection first, then anything practised earlier.
   const ids = [...new Set([...state.topicIds, ...history.map((h) => h.question.topicId)])];
@@ -174,8 +195,8 @@ export interface HomeSummary {
   readonly prep: PrepSummary;
 }
 
-export function summarise(): HomeSummary {
-  const tracks = TRACKS.map(summariseTrack);
+export function summarise(read: ReadKey = fromThisBrowser): HomeSummary {
+  const tracks = TRACKS.map((t) => summariseTrack(t, read));
   return {
     game: {
       right: tracks.reduce((n, t) => n + t.right, 0),
@@ -183,7 +204,7 @@ export function summarise(): HomeSummary {
       total: tracks.reduce((n, t) => n + t.total, 0),
       tracks,
     },
-    cards: summariseCards(),
-    prep: summarisePrep(),
+    cards: summariseCards(read),
+    prep: summarisePrep(read),
   };
 }

@@ -26,7 +26,11 @@ export type UserProfile = Omit<UserRecord, "createdAt" | "lastLoginAt">;
 export interface UserStore {
   /** Creates or updates the user. Says whether this was a new sign-up. */
   upsert(profile: UserProfile): Promise<{ user: UserRecord; isNew: boolean }>;
+  /** Everyone who has signed in, most recent login first (admin page). */
+  list(): Promise<UserRecord[]>;
 }
+
+const byLastLogin = (a: UserRecord, b: UserRecord): number => b.lastLoginAt.localeCompare(a.lastLoginAt);
 
 export class FileUserStore implements UserStore {
   private readonly file: string;
@@ -58,6 +62,10 @@ export class FileUserStore implements UserStore {
     renameSync(tmp, this.file);
     return { user, isNew: !existing };
   }
+
+  async list(): Promise<UserRecord[]> {
+    return Object.values(this.load()).sort(byLastLogin);
+  }
 }
 
 interface UserDoc extends Omit<UserRecord, "id"> {
@@ -80,5 +88,11 @@ export class MongoUserStore implements UserStore {
       user: { id, ...fields, createdAt: before?.createdAt ?? now, lastLoginAt: now },
       isNew: before === null,
     };
+  }
+
+  async list(): Promise<UserRecord[]> {
+    const users = await this.mongo.collection<UserDoc>("users");
+    const docs = await users.find({}).sort({ lastLoginAt: -1 }).toArray();
+    return docs.map(({ _id, ...rest }) => ({ id: _id, ...rest }));
   }
 }

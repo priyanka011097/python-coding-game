@@ -25,7 +25,16 @@ const EMPTY: PrepState = { topicIds: [], levels: {}, history: [], turn: 0, scree
 
 export function loadState(): PrepState {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return parsePrepState(window.localStorage.getItem(STORAGE_KEY));
+  } catch {
+    return EMPTY;
+  }
+}
+
+/** The saved session from its stored JSON. Pure, so the admin page can
+ *  read another user's saved copy with the same rules. */
+export function parsePrepState(raw: string | null): PrepState {
+  try {
     if (!raw) return EMPTY;
     const saved = JSON.parse(raw) as PrepState;
     // Drop topics that no longer exist, so a renamed id cannot wedge the session.

@@ -6,7 +6,7 @@
      - on Vercel, one serverless function (api/handler.ts)
 
    Routes: /api/me, /auth/google, /auth/google/callback, /auth/logout,
-           /api/progress, /api/llm
+           /api/progress, /api/llm, /api/admin/overview
    ===================================================================== */
 
 import { randomBytes } from "node:crypto";
@@ -17,6 +17,7 @@ import { progressMiddleware } from "./progress.js";
 import { Sessions } from "./session.js";
 import { Mongo } from "./db.js";
 import { FileUserStore, MongoUserStore } from "./users.js";
+import { adminMiddleware, isAdmin, parseAdminEmails } from "./admin.js";
 
 export type Env = Record<string, string | undefined>;
 
@@ -37,6 +38,10 @@ export function buildApi(env: Env, root: string): Connect.NextHandleFunction[] {
   // Without it, accounts go to .data/users.json (local only: a serverless
   // host has no writable disk) and progress stays in each browser.
   const mongo = env.MONGODB_URI ? new Mongo(env.MONGODB_URI, env.MONGODB_DB) : null;
+  const users = mongo ? new MongoUserStore(mongo) : new FileUserStore(root);
+
+  // Google emails allowed to open the admin page, e.g. "you@gmail.com,b@x.com".
+  const adminEmails = parseAdminEmails(env.ADMIN_EMAILS);
 
   return [
     googleAuthMiddleware({
@@ -44,8 +49,10 @@ export function buildApi(env: Env, root: string): Connect.NextHandleFunction[] {
       clientSecret: googleClientSecret,
       appUrl: env.APP_URL,
       sessions,
-      users: mongo ? new MongoUserStore(mongo) : new FileUserStore(root),
+      users,
+      isAdmin: (req) => isAdmin(req, sessions, adminEmails),
     }),
+    adminMiddleware({ adminEmails, sessions, users, mongo }),
     progressMiddleware({ mongo, sessions }),
     nvidiaMiddleware({
       apiKey: env.NVIDIA_API_KEY,

@@ -1,0 +1,82 @@
+/* admin.css — the Admin page. Scoped under .ad, shared tokens. */
+
+.ad { max-width: 1180px; margin: 0 auto; padding: 26px 20px 64px; }
+.ad .hm { padding: 0; max-width: none; } /* the embedded user dashboard */
+
+.ad-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.ad-title { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+.ad-muted { color: var(--ink-3); font-size: 12.5px; }
+.ad-error, .ad-note { padding: 12px 14px; border-radius: 9px; font-size: 14px; }
+.ad-error { background: var(--fail-soft); border: 1px solid var(--fail-line); color: var(--fail); }
+.ad-note { background: var(--warn-soft); color: var(--warn); }
+.ad-empty { padding: 30px 0; text-align: center; font-size: 14px; }
+
+.ad-refresh, .ad-back {
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2);
+  border-radius: 8px; padding: 7px 14px; font: inherit; font-size: 13.5px; cursor: pointer;
+}
+@media (hover: hover) { .ad-refresh:hover:not(:disabled), .ad-back:hover { color: var(--ink); border-color: var(--ink-3); } }
+.ad-refresh:disabled { opacity: .6; cursor: default; }
+
+/* ---------- KPI row ---------- */
+.ad-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.ad-stat {
+  display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+}
+.ad-stat span { font-size: 12.5px; color: var(--ink-2); }
+.ad-stat b { font-size: 26px; font-weight: 600; letter-spacing: -.02em; }
+
+/* ---------- search / sort ---------- */
+.ad-tools { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.ad-search {
+  flex: 1 1 260px; max-width: 360px; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px;
+}
+.ad-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ad-sort { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.ad-sort select {
+  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line-2);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 13.5px;
+}
+
+/* ---------- table ---------- */
+.ad-table-wrap {
+  overflow-x: auto; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); box-shadow: var(--shadow);
+}
+.ad-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.ad-table th {
+  text-align: left; padding: 11px 14px; white-space: nowrap;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+  border-bottom: 1px solid var(--line);
+}
+.ad-table td { padding: 11px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; color: var(--ink-2); }
+.ad-table tbody tr:last-child td { border-bottom: none; }
+.ad-table tbody tr { cursor: pointer; }
+@media (hover: hover) { .ad-table tbody tr:hover td { background: var(--surface-2); } }
+.ad-table tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ad-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.ad-table td b { color: var(--ink); font-weight: 600; }
+
+.ad-user { display: flex; align-items: center; gap: 10px; }
+.ad-user__text { display: flex; flex-direction: column; min-width: 0; }
+.ad-user__name { color: var(--ink); font-weight: 500; }
+.ad-avatar { width: 32px; height: 32px; border-radius: 50%; flex: none; object-fit: cover; border: 1px solid var(--line-2); }
+.ad-avatar--text {
+  display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink);
+  font-size: 13px; font-weight: 600;
+}
+
+/* ---------- one user ---------- */
+.ad-detail-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.ad-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ad-who .ad-avatar { width: 44px; height: 44px; }
+.ad-who__name { font-size: 16px; font-weight: 600; }
+
+@media (max-width: 860px) { .ad-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) {
+  .ad { padding: 18px 16px 48px; }
+  .ad-title { font-size: 22px; }
+  .ad-search { max-width: none; }
+}

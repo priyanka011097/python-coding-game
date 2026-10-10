@@ -86,6 +86,11 @@
 }
 @media (hover: hover) { .hm-btn:hover { filter: brightness(1.08); } }
 
+/* Read-only (admin page): same look, no hover or pointer. */
+.hm-static { cursor: default; }
+.hm-static.hm-stat:hover { border-color: var(--line); transform: none; }
+.hm-static.hm-row:hover { background: none; }
+
 @media (max-width: 860px) {
   .hm-grid { grid-template-columns: minmax(0, 1fr); }
 }

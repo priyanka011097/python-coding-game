@@ -33,6 +33,8 @@ export interface GoogleAuthOptions {
   appUrl: string | undefined;
   sessions: Sessions;
   users: UserStore;
+  /** Lets the page show the Admin button; the admin API checks again. */
+  isAdmin: (req: IncomingMessage) => boolean;
 }
 
 interface IdTokenClaims {
@@ -93,7 +95,8 @@ export function googleAuthMiddleware(opts: GoogleAuthOptions): Connect.NextHandl
     const fail = (code: string): void => redirect(res, `/?auth_error=${encodeURIComponent(code)}`);
 
     if (path === "/api/me" && req.method === "GET") {
-      json(res, 200, { configured, callbackUrl, user: opts.sessions.read(req) });
+      const user = opts.sessions.read(req);
+      json(res, 200, { configured, callbackUrl, user: user ? { ...user, isAdmin: opts.isAdmin(req) } : null });
       return;
     }
 

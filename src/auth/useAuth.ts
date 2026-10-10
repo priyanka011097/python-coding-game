@@ -13,6 +13,8 @@ export interface AuthUser {
   email: string;
   name: string;
   picture: string;
+  /** Email is in ADMIN_EMAILS. Only shows the button; the server re-checks. */
+  isAdmin?: boolean;
 }
 
 export type AuthState =
