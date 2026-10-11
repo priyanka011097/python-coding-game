@@ -9,12 +9,13 @@
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { ThemeToggle } from "../theme/ThemeToggle";
+import { BRAND, BRAND_MARK } from "../brand";
 import "./info.css";
 
 export const OWNER = "Build with Priyanka";
 export const OWNER_URL = "https://buildwithpriyanka.in";
 export const CONTACT_EMAIL = "shahasanepriyanka@gmail.com";
-const UPDATED = "11 October 2026";
+const UPDATED = "12 October 2026";
 
 export const INFO_PATHS = ["/about", "/privacy", "/contact"] as const;
 export type InfoPath = (typeof INFO_PATHS)[number];
@@ -60,12 +61,12 @@ function Shell({ title, children }: { title: string; children: ReactNode }) {
     <div className="info">
       <header className="info-nav">
         <a className="info-brand" href="/">
-          <span className="info-brand__mark" aria-hidden="true">IP</span>
-          Interview Prep
+          <span className="info-brand__mark" aria-hidden="true">{BRAND_MARK}</span>
+          {BRAND}
         </a>
         <div className="info-nav__end">
           <ThemeToggle />
-          <a className="info-open" href="/">Open Interview Prep</a>
+          <a className="info-open" href="/">Open {BRAND}</a>
         </div>
       </header>
       <main className="info-main">
@@ -81,16 +82,16 @@ function Shell({ title, children }: { title: string; children: ReactNode }) {
 
 function About() {
   return (
-    <Shell title="About Interview Prep">
+    <Shell title={`About ${BRAND}`}>
       <p className="info-lede">
-        Interview Prep helps developers get ready for technical interviews, one question at a time, and shows
+        {BRAND} helps developers get ready for technical interviews, one question at a time, and shows
         exactly how ready they are.
       </p>
       <h2>Three ways to practise</h2>
       <ul>
         <li><b>Coding Game</b>: 357 fill-in-the-blank questions in real code, across TypeScript + React, Python from zero to DSA, and Data + AI. Every answer explains the why.</li>
         <li><b>Study Cards</b>: 1,103 interview flashcards in 11 decks, from React and system design to databases, security, DSA and 100 Python coding problems.</li>
-        <li><b>Interview Prep</b>: an AI interviewer that asks one question at a time across 35 topics, grades each answer out of 10 with feedback and a model answer, and gets harder as you improve.</li>
+        <li><b>AI Interview Prep</b>: an AI interviewer that asks one question at a time across 35 topics, grades each answer out of 10 with feedback and a model answer, and gets harder as you improve.</li>
       </ul>
       <p>
         A dashboard brings it together, with a readiness score that rewards doing well on hard questions in
@@ -98,7 +99,7 @@ function About() {
       </p>
       <h2>Who makes it</h2>
       <p>
-        Interview Prep is a product from <b>{OWNER}</b>. Find more at{" "}
+        {BRAND} is a product from <b>{OWNER}</b>. Find more at{" "}
         <a href={OWNER_URL} target="_blank" rel="noopener">buildwithpriyanka.in</a>.
       </p>
       <h2>Get in touch</h2>
@@ -117,14 +118,14 @@ function Privacy() {
     <Shell title="Privacy Policy">
       <p className="info-updated">Last updated: {UPDATED}</p>
       <p>
-        This policy explains what information Interview Prep (“we”, “us”), a product from {OWNER}, collects when
+        This policy explains what information {BRAND} (“we”, “us”), a product from {OWNER}, collects when
         you use this website, how we use it, and the choices you have.
       </p>
 
       <h2>1. Information we collect</h2>
       <ul>
         <li><b>Your Google account details.</b> When you sign in with Google we receive your name, email address, profile picture and Google account ID. We never see your Google password.</li>
-        <li><b>Your practice progress.</b> Your Coding Game answers, Study Cards you viewed, flagged or edited, your Interview Prep questions, answers, scores and levels, the subjects you chose, and your settings. This is stored in our database linked to your account, and in your browser’s local storage.</li>
+        <li><b>Your practice progress.</b> Your Coding Game answers, Study Cards you viewed, flagged or edited, your AI Interview Prep questions, answers, scores and levels, the subjects you chose, and your settings. This is stored in our database linked to your account, and in your browser’s local storage.</li>
         <li><b>Messages you send us</b> through the contact form: your name, email address and message.</li>
         <li><b>Technical information.</b> Your IP address is used briefly to prevent spam on the contact form. Our hosting provider may record standard server logs such as IP address, browser type and the pages requested.</li>
       </ul>
@@ -132,7 +133,7 @@ function Privacy() {
       <h2>2. How we use it</h2>
       <ul>
         <li>To provide the service: sign you in, save your progress and sync it across your devices.</li>
-        <li>To generate and grade Interview Prep questions.</li>
+        <li>To generate and grade AI Interview Prep questions.</li>
         <li>To reply to your messages and support requests.</li>
         <li>To keep the service secure and prevent abuse.</li>
         <li>To show advertising that helps fund the service (see section 4).</li>
@@ -141,9 +142,10 @@ function Privacy() {
       <h2>3. Services we rely on</h2>
       <ul>
         <li><b>Google</b> for sign-in (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>).</li>
-        <li><b>NVIDIA</b> AI models power Interview Prep. The questions you are asked and the answers you type are sent to NVIDIA’s API to create questions and grade answers. Please do not include personal information in your answers.</li>
+        <li><b>NVIDIA</b> AI models power AI Interview Prep. The questions you are asked and the answers you type are sent to NVIDIA’s API to create questions and grade answers. Please do not include personal information in your answers.</li>
         <li><b>MongoDB Atlas</b> stores accounts and progress, and <b>Vercel</b> hosts the website.</li>
         <li><b>Voice features</b> use your browser. Reading questions aloud happens on your device. Voice answers use your browser’s speech recognition; in Google Chrome, for example, your browser sends the audio to Google to turn it into text. We never receive or store audio.</li>
+        <li><b>Google Analytics</b> counts visits and shows us which pages and sections are used, so we can improve the site. It uses cookies and receives your IP address and browser details (<a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">how Google uses this data</a>).</li>
         <li><b>Google Fonts</b> provides the typefaces used on the site.</li>
       </ul>
 
@@ -151,6 +153,7 @@ function Privacy() {
       <ul>
         <li><b>ip_session</b>: keeps you signed in for up to 30 days. It cannot be read by scripts on the page.</li>
         <li><b>ip_oauth_state</b> and <b>ip_oauth_next</b>: last 10 minutes and protect the sign-in process.</li>
+        <li><b>_ga</b> and <b>_ga_*</b>: Google Analytics cookies that tell visits apart, kept for up to 2 years.</li>
         <li><b>Local storage</b>: your progress, theme and display preferences on this device.</li>
       </ul>
       <p>
@@ -189,7 +192,7 @@ function Privacy() {
 
       <h2>8. Children</h2>
       <p>
-        Interview Prep is not directed at children under 13, and we do not knowingly collect information from them.
+        {BRAND} is not directed at children under 13, and we do not knowingly collect information from them.
         If you believe a child has given us information, contact us and we will delete it.
       </p>
 

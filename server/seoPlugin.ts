@@ -44,11 +44,22 @@ function fillTemplate(template: string, origin: string, page: PrerenderedPage): 
 
 const DECKS_MODULE = "src/cards/data/decks.ts";
 
+/** The Google Analytics 4 tag, when GA_MEASUREMENT_ID (G-…) is set. Only in
+ *  built pages, so local development does not count as views. */
+function analyticsTag(env: Record<string, string | undefined>): string {
+  const id = env.GA_MEASUREMENT_ID?.trim() ?? "";
+  if (!/^G-[A-Z0-9]+$/.test(id)) return "";
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag("js",new Date());gtag("config","${id}");</script>
+`;
+}
+const withAnalytics = (html: string, tag: string): string => (tag ? html.replace("</head>", `${tag}</head>`) : html);
+
 /** The public address used in canonical links and the sitemap. */
 export function publicOrigin(env: Record<string, string | undefined>): string {
   if (env.APP_URL) return env.APP_URL.replace(/\/+$/, "");
   if (env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  return "https://python-coding-game.vercel.app";
+  return "https://hypertransformerai.com";
 }
 
 export function seoPages(env: Record<string, string | undefined>): Plugin {
@@ -70,7 +81,7 @@ export function seoPages(env: Record<string, string | undefined>): Plugin {
         if (env.GOOGLE_SITE_VERIFICATION) {
           out = out.replace("</head>", `  <meta name="google-site-verification" content="${env.GOOGLE_SITE_VERIFICATION.replace(/"/g, "")}" />\n  </head>`);
         }
-        return out;
+        return ctx.server ? out : withAnalytics(out, analyticsTag(env));
       },
     },
 
@@ -113,12 +124,15 @@ export function seoPages(env: Record<string, string | undefined>): Plugin {
         const { DECKS } = (await import(pathToFileURL(outfile).href)) as { DECKS: readonly Deck[] };
         const origin = publicOrigin(env);
         const out = join(config.root, config.build.outDir);
+        const tag = analyticsTag(env);
+        // Every static page gets the analytics tag (index.html has it already).
+        const writePage = (file: string, html: string): void => writeFileSync(file, withAnalytics(html, tag));
         mkdirSync(join(out, "cards"), { recursive: true });
-        writeFileSync(join(out, "cards.html"), renderIndex(origin, DECKS));
-        for (const deck of DECKS) writeFileSync(join(out, "cards", `${slugOf(deck.name)}.html`), renderDeck(origin, deck, DECKS));
+        writePage(join(out, "cards.html"), renderIndex(origin, DECKS));
+        for (const deck of DECKS) writePage(join(out, "cards", `${slugOf(deck.name)}.html`), renderDeck(origin, deck, DECKS));
         writeFileSync(join(out, "sitemap.xml"), renderSitemap(origin, DECKS));
         writeFileSync(join(out, "robots.txt"), renderRobots(origin));
-        writeFileSync(join(out, "404.html"), render404(origin, DECKS));
+        writePage(join(out, "404.html"), render404(origin, DECKS));
         config.logger.info(`  public Study Cards: ${DECKS.length + 1} pages, sitemap.xml, robots.txt, 404 (${origin})`);
 
         /* Pre-render the app's public pages (landing, About, Privacy,

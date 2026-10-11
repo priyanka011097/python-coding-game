@@ -45,7 +45,7 @@ export function AdminMessages() {
               <li key={m.id}>
                 <div className="ad-msg__head">
                   <b>{m.name}</b>
-                  <a href={`mailto:${m.email}?subject=${encodeURIComponent("Re: your message to Interview Prep")}`}>{m.email}</a>
+                  <a href={`mailto:${m.email}?subject=${encodeURIComponent("Re: your message to HyperTransformer AI")}`}>{m.email}</a>
                   {m.userId && <span className="ad-msg__tag">signed in</span>}
                   <span className="ad-muted">
                     {new Date(m.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}

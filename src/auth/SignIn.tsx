@@ -10,6 +10,8 @@ import { ThemeToggle } from "../theme/ThemeToggle";
 import { LandingDuck } from "./LandingDuck";
 import { AdLayout } from "../ads/AdLayout";
 import { SiteFooter } from "../info/InfoPages";
+import { BRAND, BRAND_MARK } from "../brand";
+import { slugOf } from "../cards/slug";
 import "./landing.css";
 
 interface SignInProps {
@@ -65,7 +67,7 @@ const SECTIONS = [
   },
   {
     icon: "🎙️",
-    name: "Interview Prep",
+    name: "AI Interview Prep",
     stat: "35 topics · AI interviewer",
     body: "An AI interviewer asks one question at a time, from basics to expert. Each answer gets a score out of 10, feedback and a model answer, and the next question adapts.",
   },
@@ -79,6 +81,56 @@ const EXTRAS = [
   ["🧩", "Choose your topics", "Focus on the decks and languages your next interview is about."],
   ["🦆", "A duck that cheers", "Small wins add up, and a duck pops in to celebrate them."],
 ] as const;
+
+/* The public Study Cards decks (server/publicCards.ts). Listed here rather
+   than imported, so the landing page does not load all 1,103 cards. */
+const DECK_LINKS = [
+  ["⚛️", "React & Frontend", "Hooks, rendering, state and performance"],
+  ["🟨", "JavaScript & TypeScript", "Closures, the event loop, types and generics"],
+  ["🚀", "Backend Engineering", "APIs, auth, queues, caching and scaling"],
+  ["🗃️", "Databases", "SQL, indexes, transactions and NoSQL"],
+  ["🏗️", "System Design", "Load balancers, sharding and trade-offs"],
+  ["🤖", "AI & Agentic AI", "LLMs, RAG, embeddings and agents"],
+  ["☁️", "DevOps & Cloud", "Docker, Kubernetes, CI/CD and AWS"],
+  ["🔐", "Security", "OWASP, auth, encryption and XSS"],
+  ["🧪", "Testing", "Unit, integration, mocking and TDD"],
+  ["🧮", "DSA", "Arrays, trees, graphs and dynamic programming"],
+  ["🐍", "Coding Problems (Python)", "100 classic problems with solutions"],
+] as const;
+
+/* Shown on the page and given to search engines as an FAQ (JSON-LD below). */
+const FAQ = [
+  [
+    `What is ${BRAND}?`,
+    `${BRAND} is an interview preparation platform for developers. It has a Coding Game with 357 fill-in-the-blank questions, 1,103 interview flashcards in 11 decks, and an AI interviewer that asks one question at a time across 35 topics. A dashboard and readiness score show how ready you are.`,
+  ],
+  [
+    "Which topics can I practise?",
+    "Data structures and algorithms, system design, machine learning, generative AI and LLMs, CS fundamentals, Python, JavaScript, TypeScript, React, Node.js, Java, Go, Rust, C++, SQL, PostgreSQL, MongoDB, Redis, DevOps, security, testing and more.",
+  ],
+  [
+    "How does the AI interviewer work?",
+    "It asks one question at a time, starting at your level. You answer by typing or by voice, and each answer gets a score out of 10, written feedback, the points you missed and a model answer. Questions get harder as you improve.",
+  ],
+  [
+    "How is the readiness score worked out?",
+    "It rewards doing well on hard questions in every topic you chose, so a high score means you are strong across your whole interview, not just on easy questions.",
+  ],
+  [
+    "Do I need an account?",
+    "You can browse the first cards of every Study Cards deck without one. Sign in with Google to practise everything and save your progress to your account, so you can pick up on any device.",
+  ],
+  [
+    "Does it work on my phone?",
+    "Yes. Everything works in a phone browser, including reading questions aloud and answering by voice.",
+  ],
+] as const;
+
+const FAQ_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+}).replace(/</g, "\\u003c");
 
 const TOPICS =
   "DSA · System Design · Machine Learning · GenAI & LLMs · CS Fundamentals · Python · JavaScript · TypeScript · React · Node.js · Java · Go · Rust · C++ · SQL · PostgreSQL · MongoDB · Redis · and more";
@@ -119,11 +171,12 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
   return (
     <div className="lp">
       <header className="lp-nav">
-        <span className="lp-brand">
-          <span className="lp-brand__mark" aria-hidden="true">IP</span>
-          Interview Prep
-        </span>
+        <a className="lp-brand" href="/">
+          <span className="lp-brand__mark" aria-hidden="true">{BRAND_MARK}</span>
+          {BRAND}
+        </a>
         <div className="lp-nav__end">
+          <a className="lp-navlink" href="/cards">Study cards</a>
           <ThemeToggle />
           <a className="lp-signin" href={signInHref}>
             Sign in
@@ -189,10 +242,28 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
             ))}
           </div>
           <p className="lp-topics">
-            <span>Interview Prep covers</span> {TOPICS}
+            <span>AI Interview Prep covers</span> {TOPICS}
           </p>
+        </section>
+
+        <section className="lp-section" aria-labelledby="lp-decks" data-duck="Peek at any deck, no sign-in!">
+          <h2 id="lp-decks" className="lp-h2">Popular interview topics</h2>
+          <p className="lp-sub">Interview questions with clear answers. Open a deck to try the first cards.</p>
+          <ul className="lp-decks">
+            {DECK_LINKS.map(([icon, name, blurb]) => (
+              <li key={name}>
+                <a className="lp-deck" href={`/cards/${slugOf(name)}`}>
+                  <span className="lp-deck__icon" aria-hidden="true">{icon}</span>
+                  <span>
+                    <b>{name} interview questions</b>
+                    <small>{blurb}</small>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
           <p className="lp-topics">
-            <a href="/cards">Browse interview flashcards →</a> React, system design, DSA, databases and more.
+            <a href="/cards">See all study cards →</a>
           </p>
         </section>
 
@@ -236,6 +307,19 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
               </div>
             ))}
           </div>
+        </section>
+
+        <section className="lp-section" aria-labelledby="lp-faq" data-duck="Questions? I've got answers!">
+          <h2 id="lp-faq" className="lp-h2">Frequently asked questions</h2>
+          <div className="lp-faq">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="lp-faq__item">
+                <summary>{q}</summary>
+                <p>{a}</p>
+              </details>
+            ))}
+          </div>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: FAQ_LD }} />
         </section>
 
         <section className="lp-final" data-duck-big="Quack! Let's go!">

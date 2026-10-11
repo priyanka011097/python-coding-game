@@ -25,7 +25,7 @@ export const PAGES: readonly PrerenderedPage[] = [
   {
     path: "/",
     file: "index.html",
-    title: "Interview Prep: coding drills, interview flashcards and an AI interviewer",
+    title: "AI Interview Prep & Mock Interviews | HyperTransformer AI",
     description:
       "Practise for technical interviews one question at a time: 357 fill-in-the-blank coding questions, 1,103 interview flashcards and an AI interviewer across 35 topics, with a readiness score that shows how ready you are.",
     html: () => renderToString(<SignIn error={null} callbackUrl="" />),
@@ -33,24 +33,24 @@ export const PAGES: readonly PrerenderedPage[] = [
   {
     path: "/about",
     file: "about.html",
-    title: "About Interview Prep | Build with Priyanka",
+    title: "About HyperTransformer AI | Build with Priyanka",
     description:
-      "Interview Prep helps developers get ready for technical interviews with coding drills, 1,103 interview flashcards and an AI interviewer. A product from buildwithpriyanka.in.",
+      "HyperTransformer AI helps developers get ready for technical interviews with coding drills, 1,103 interview flashcards and an AI interviewer. A product from buildwithpriyanka.in.",
     html: () => renderToString(<InfoPage path="/about" />),
   },
   {
     path: "/privacy",
     file: "privacy.html",
-    title: "Privacy Policy | Interview Prep",
+    title: "Privacy Policy | HyperTransformer AI",
     description:
-      "What Interview Prep collects, how it is used, the services it relies on, cookies and advertising, and how to delete your data.",
+      "What HyperTransformer AI collects, how it is used, the services it relies on, cookies and advertising, and how to delete your data.",
     html: () => renderToString(<InfoPage path="/privacy" />),
   },
   {
     path: "/contact",
     file: "contact.html",
-    title: "Contact | Interview Prep",
-    description: "Questions, feedback, a bug or a topic you would like added? Send the Interview Prep team a message.",
+    title: "Contact | HyperTransformer AI",
+    description: "Questions, feedback, a bug or a topic you would like added? Send the HyperTransformer AI team a message.",
     html: () => renderToString(<InfoPage path="/contact" />),
   },
 ];

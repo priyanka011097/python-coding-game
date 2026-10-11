@@ -12,7 +12,7 @@
    Register a redirect URI on the OAuth client in Google Cloud Console for
    every address the app is served from, e.g.
      http://localhost:5173/auth/google/callback
-     https://python-coding-game.vercel.app/auth/google/callback
+     https://hypertransformerai.com/auth/google/callback
    ===================================================================== */
 
 import type { IncomingMessage, ServerResponse } from "node:http";

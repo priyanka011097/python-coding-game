@@ -13,12 +13,12 @@
    ===================================================================== */
 
 import type { Deck } from "../src/cards/types.js";
+import { slugOf } from "../src/cards/slug.js";
 
 /** How many cards of each deck are public. */
 export const PUBLIC_CARDS = 5;
 
-export const slugOf = (name: string): string =>
-  name.toLowerCase().replace(/&/g, " ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+export { slugOf };
 
 const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -153,7 +153,7 @@ function page(opts: { origin: string; path: string; title: string; description: 
 <meta name="description" content="${esc(opts.description)}">
 ${opts.noindex ? `<meta name="robots" content="noindex">` : `<link rel="canonical" href="${esc(url)}">`}
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta property="og:image" content="${esc(opts.origin)}/og-image.png"><meta name="twitter:image" content="${esc(opts.origin)}/og-image.png">
+<meta property="og:image" content="${esc(opts.origin)}/og-image.png?v=2"><meta name="twitter:image" content="${esc(opts.origin)}/og-image.png?v=2">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(opts.title)}">
 <meta property="og:description" content="${esc(opts.description)}">
@@ -166,7 +166,7 @@ ${opts.noindex ? `<meta name="robots" content="noindex">` : `<link rel="canonica
 ${opts.jsonLd ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
 </head>
 <body${opts.total ? ` data-total="${opts.total}"` : ""}${opts.deck ? ` data-deck="${esc(opts.deck)}"` : ""}>
-<header class="top"><div class="bar"><a class="brand" href="/"><span class="mark">IP</span>Interview Prep</a><div class="end"><button type="button" class="tt" aria-label="Switch light or dark mode">${SUN}</button><a class="signin" href="/">Sign in</a></div></div></header>
+<header class="top"><div class="bar"><a class="brand" href="/"><span class="mark">HT</span>HyperTransformer AI</a><div class="end"><button type="button" class="tt" aria-label="Switch light or dark mode">${SUN}</button><a class="signin" href="/">Sign in</a></div></div></header>
 ${opts.body}
 <footer><span>A product from <a class="own" href="https://buildwithpriyanka.in">buildwithpriyanka.in</a></span><a href="/cards">Study cards</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/contact">Contact</a></footer>
 <script>${TOGGLE_JS}${SIGNED_IN_JS}${opts.script ?? ""}</script>
@@ -183,7 +183,7 @@ export function renderIndex(origin: string, decks: readonly Deck[]): string {
   return page({
     origin,
     path: "/cards",
-    title: "Interview flashcards: React, system design, DSA and more | Interview Prep",
+    title: "Interview flashcards: React, system design, DSA and more | HyperTransformer AI",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "ItemList",
@@ -230,7 +230,7 @@ export function renderDeck(origin: string, deck: Deck, decks: readonly Deck[]): 
   return page({
     origin,
     path: `/cards/${slugOf(deck.name)}`,
-    title: `${deck.name} interview questions and answers | Interview Prep`,
+    title: `${deck.name} interview questions and answers | HyperTransformer AI`,
     description: `${deck.cards.length} ${deck.name} interview questions with clear answers.${first ? ` Starts with: ${first.q}` : ""}`.slice(0, 300),
     total: deck.cards.length,
     deck: deck.name,
@@ -249,7 +249,7 @@ export function renderDeck(origin: string, deck: Deck, decks: readonly Deck[]): 
         {
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Interview Prep", item: `${origin}/` },
+            { "@type": "ListItem", position: 1, name: "HyperTransformer AI", item: `${origin}/` },
             { "@type": "ListItem", position: 2, name: "Study cards", item: `${origin}/cards` },
             { "@type": "ListItem", position: 3, name: deck.name, item: `${origin}/cards/${slugOf(deck.name)}` },
           ],
@@ -293,13 +293,13 @@ export function render404(origin: string, decks: readonly Deck[]): string {
   return page({
     origin,
     path: "/404",
-    title: "Page not found | Interview Prep",
+    title: "Page not found | HyperTransformer AI",
     description: "That page does not exist.",
     noindex: true,
     body: `<main class="sc"><h1 class="home-title">Page not found</h1>
 <p class="sub">That address does not exist, but there is plenty to practise. Pick a topic:</p>
 <ul class="grid">${decks.slice(0, 6).map((d) => `<li><a class="tc" href="/cards/${slugOf(d.name)}"><span class="t"><span class="i">${d.icon}</span><span><b>${esc(d.name)}</b><small>${d.cards.length} cards</small></span></span></a></li>`).join("")}</ul>
-<p class="more"><a href="/">Go to Interview Prep</a> <a href="/cards">All study cards</a></p></main>`,
+<p class="more"><a href="/">Go to HyperTransformer AI</a> <a href="/cards">All study cards</a></p></main>`,
   });
 }
 

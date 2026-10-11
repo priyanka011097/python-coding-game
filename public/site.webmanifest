@@ -1,6 +1,6 @@
 {
-  "name": "Interview Prep",
-  "short_name": "Interview Prep",
+  "name": "HyperTransformer AI",
+  "short_name": "HyperTransformer",
   "description": "Coding drills, interview flashcards and an AI interviewer, one question at a time.",
   "start_url": "/",
   "display": "standalone",
