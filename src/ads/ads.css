@@ -1,0 +1,31 @@
+/* ads.css — the left/right ad rails. See AdLayout.tsx. */
+
+.ad-layout { display: block; }
+.ad-layout__main { min-width: 0; }
+.ad-rail { display: none; }
+
+@media (min-width: 1200px) {
+  .ad-layout {
+    --ad-rail: 160px;
+    display: grid;
+    grid-template-columns: var(--ad-rail) minmax(0, 1fr) var(--ad-rail);
+    column-gap: 20px;
+    padding: 0 16px;
+  }
+  .ad-rail { display: block; }
+  /* The slot stays in view while the page scrolls. */
+  .ad-slot {
+    position: sticky; top: 88px;
+    width: var(--ad-rail); height: 600px; margin-top: 24px;
+  }
+}
+@media (min-width: 1600px) {
+  .ad-layout { --ad-rail: 300px; column-gap: 28px; padding: 0 24px; }
+}
+
+/* Development only: shows where the ads will sit. */
+.ad-slot__dev {
+  display: grid; place-items: center; height: 100%;
+  border: 1px dashed var(--line-2); border-radius: 10px;
+  color: var(--ink-3); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+}

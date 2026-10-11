@@ -1,0 +1,67 @@
+/* info.css — About, Privacy and Contact pages, and the site footer. */
+
+.info { min-height: 100vh; display: flex; flex-direction: column; }
+.info-nav {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  max-width: 1120px; width: 100%; margin: 0 auto; padding: 18px 24px;
+}
+.info-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.info-brand__mark {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+  background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 700;
+}
+.info-nav__end { display: flex; align-items: center; gap: 10px; }
+.info-open {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 8px;
+  background: var(--accent); color: var(--on-accent); text-decoration: none; font-size: 13.5px; font-weight: 600;
+}
+@media (hover: hover) { .info-open:hover { filter: brightness(1.08); } }
+
+.info-main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 24px 24px 56px; line-height: 1.65; }
+.info-main h1 { margin: 8px 0 10px; font-size: clamp(28px, 4vw, 38px); letter-spacing: -.02em; }
+.info-main h2 { margin: 30px 0 8px; font-size: 18px; }
+.info-main p, .info-main li { font-size: 15px; color: var(--ink-2); }
+.info-main p { margin: 0 0 12px; }
+.info-main ul { margin: 0 0 12px; padding-left: 20px; }
+.info-main li { margin-bottom: 8px; }
+.info-main b { color: var(--ink); }
+.info-main a { color: var(--accent-ink); }
+.info-lede { font-size: 17px !important; color: var(--ink) !important; }
+.info-updated { font-size: 13px !important; color: var(--ink-3) !important; }
+
+.info-form { display: grid; gap: 14px; margin: 18px 0; padding: 22px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.info-form label { display: grid; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.info-form input, .info-form textarea {
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line-2);
+  background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; font-weight: 400;
+}
+.info-form textarea { resize: vertical; min-height: 140px; }
+.info-form input:focus, .info-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.info-form button {
+  justify-self: start; padding: 11px 22px; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); font: inherit; font-size: 15px; font-weight: 600;
+}
+.info-form button:disabled { opacity: .6; cursor: default; }
+.info-hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.info-error { margin: 0 !important; padding: 10px 12px; border-radius: 8px; background: var(--fail-soft); color: var(--fail) !important; font-size: 14px !important; }
+.info-sent { margin: 18px 0; padding: 16px 18px; border-radius: 12px; background: var(--pass-soft); border: 1px solid var(--pass-line); color: var(--pass); }
+.info-sent b { color: var(--pass); }
+.info-alt { font-size: 14px !important; }
+
+/* ---------- footer on every page ---------- */
+.site-foot {
+  display: flex; align-items: center; justify-content: center; gap: 10px 22px; flex-wrap: wrap;
+  padding: 22px 24px 30px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-3); text-align: center;
+}
+.site-foot a { color: var(--accent-ink); text-decoration: none; font-weight: 600; }
+.site-foot nav { display: flex; gap: 18px; }
+.site-foot nav a { color: var(--ink-2); font-weight: 500; }
+@media (hover: hover) { .site-foot a:hover { text-decoration: underline; text-underline-offset: 3px; } }
+
+@media (max-width: 600px) {
+  .info-nav { padding: 14px 16px; }
+  .info-open { display: none; }
+  .info-main { padding: 16px 16px 44px; }
+  .info-form { padding: 16px; }
+  .info-form button { justify-self: stretch; }
+}

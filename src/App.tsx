@@ -4,6 +4,7 @@
    ===================================================================== */
 
 import { Suspense, lazy, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import type { AppMode, TrackId } from "./types";
 import { TRACKS, TRACK_BY_ID } from "./data/tracks";
 import { Tabs } from "./components/Tabs";
@@ -14,9 +15,12 @@ import type { HomeTarget } from "./home/HomeMode";
 import { initialTrack, rememberTrack } from "./home/subjects";
 import { TrackPicker } from "./components/TrackPicker";
 import { SignIn } from "./auth/SignIn";
+import { likelySignedIn, setSignedInHint } from "./auth/signedInHint";
 import { UserMenu } from "./auth/UserMenu";
 import { ThemeToggle } from "./theme/ThemeToggle";
 import { DuckHost } from "./duck/DuckHost";
+import { AdLayout } from "./ads/AdLayout";
+import { InfoPage, SiteFooter, infoPathOf } from "./info/InfoPages";
 import { forget, hydrate, trySaveAll } from "./sync/progressSync";
 
 /* The flashcard decks are ~1,100 cards of text. Loading that mode lazily
@@ -42,6 +46,29 @@ const MODES: readonly { id: Exclude<AppMode, "home">; label: string }[] = [
 ];
 
 
+/** Wraps the page in the left/right ad rails when `show` is true. */
+function MaybeAds({ show, children }: { show: boolean; children: ReactNode }) {
+  return show ? <AdLayout>{children}</AdLayout> : <>{children}</>;
+}
+
+/* ?open=cards[&deck=…] (from the public card pages or the footer) opens
+   Study Cards, on that deck. Read once at load and removed from the address
+   bar: doing this inside a state initialiser broke under StrictMode, which
+   runs initialisers twice, so the second run found the address already
+   cleaned. */
+const LAUNCH = (() => {
+  const q = new URLSearchParams(window.location.search);
+  const open = q.get("open");
+  const deck = q.get("deck") ?? undefined;
+  if (open) {
+    q.delete("open");
+    q.delete("deck");
+    const rest = q.toString();
+    window.history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : "") + window.location.hash);
+  }
+  return { cards: open === "cards", deck: open === "cards" ? deck : undefined };
+})();
+
 // Read once, before the first render clears the address bar.
 const notice = takeAuthNotice();
 
@@ -51,6 +78,10 @@ export default function App() {
      for it, because every mode reads its saved state once, on mount. */
   const [hydratedFor, setHydratedFor] = useState<string | null>(null);
   const userId = auth.status === "signed-in" ? auth.user.id : null;
+
+  useEffect(() => {
+    if (auth.status !== "loading") setSignedInHint(auth.status === "signed-in");
+  }, [auth.status]);
 
   useEffect(() => {
     if (!userId) return;
@@ -79,7 +110,13 @@ export default function App() {
     await logout();
   };
 
-  if (auth.status === "loading") return null;
+  // About, Privacy and Contact are public: no sign-in, no waiting for it.
+  const infoPath = infoPathOf(window.location.pathname);
+  if (infoPath) return <InfoPage path={infoPath} />;
+
+  /* While the sign-in check runs, keep showing the pre-rendered landing
+     page to visitors who are probably signed out, instead of a blank page. */
+  if (auth.status === "loading") return likelySignedIn() ? null : <SignIn error={notice.error} callbackUrl="" />;
   if (auth.status === "signed-out") {
     return <SignIn error={notice.error} callbackUrl={auth.callbackUrl} />;
   }
@@ -95,6 +132,14 @@ export default function App() {
   );
 }
 
+const MODE_TITLES: Record<AppMode, string> = {
+  home: "Dashboard",
+  game: "Coding Game",
+  cards: "Study Cards",
+  prep: "AI Interview Prep",
+  admin: "Admin",
+};
+
 interface MainAppProps {
   /** null when Google sign-in is not configured and the app runs open. */
   user: AuthUser | null;
@@ -104,10 +149,15 @@ interface MainAppProps {
 
 function MainApp({ user, welcome, onLogout }: MainAppProps) {
   // Every visit starts on the Home dashboard.
-  // Every visit starts on Home, except the /admin address (admins only).
+  // Where to open: /admin (admins only), ?open=cards (see LAUNCH), else Home.
+  const launch = LAUNCH;
   const [mode, setMode] = useState<AppMode>(() =>
-    window.location.pathname.replace(/\/+$/, "") === "/admin" && user?.isAdmin ? "admin" : "home",
+    window.location.pathname.replace(/\/+$/, "") === "/admin" && user?.isAdmin ? "admin" : launch.cards ? "cards" : "home",
   );
+
+  useEffect(() => {
+    document.title = `${MODE_TITLES[mode]} | Interview Prep`;
+  }, [mode]);
 
   /* Keep the address bar in step, so /admin can be bookmarked and shared
      between admins. Everything else lives at /. */
@@ -123,8 +173,8 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
     rememberTrack(id);
     setTrackIdState(id);
   };
-  /** A deck chosen on Home; Study Cards opens straight onto it. */
-  const [deckToOpen, setDeckToOpen] = useState<string | undefined>(undefined);
+  /** A deck chosen on Home (or a public deck page); Study Cards opens straight onto it. */
+  const [deckToOpen, setDeckToOpen] = useState<string | undefined>(launch.deck);
 
   const openFromHome = (target: HomeTarget): void => {
     if (target.mode === "game" && target.track) setTrackId(target.track);
@@ -190,37 +240,47 @@ function MainApp({ user, welcome, onLogout }: MainAppProps) {
 
       <DuckHost firstName={user ? (user.name.split(" ")[0] ?? "") : ""} />
 
-      {showWelcome && user && (
-        <div className="welcome" role="status">
-          Welcome, {user.name.split(" ")[0]}! Your account is ready.
-          <button type="button" aria-label="Dismiss" onClick={() => setShowWelcome(false)}>
-            ×
-          </button>
-        </div>
-      )}
+      {/* Equal ad space left and right on every page (not the private Admin page). */}
+      <MaybeAds show={mode !== "admin"}>
+        {showWelcome && user && (
+          <div className="welcome" role="status">
+            Welcome, {user.name.split(" ")[0]}! Your account is ready.
+            <button type="button" aria-label="Dismiss" onClick={() => setShowWelcome(false)}>
+              ×
+            </button>
+          </div>
+        )}
 
-      {mode === "game" ? (
-        <div className="wrap">
-          {/* key={trackId} remounts the whole view on a tab change, so each
-              track's progress and position start clean. */}
-          {track ? <TrackView key={track.id} track={track} /> : <TrackPicker tracks={TRACKS} onPick={setTrackId} />}
-        </div>
-      ) : (
-        <Suspense fallback={null}>
-          {mode === "home" && (
-            <HomeMode firstName={user ? (user.name.split(" ")[0] ?? null) : null} onOpen={openFromHome} />
-          )}
-          {mode === "cards" && (
-            <CardsMode
-              key={deckToOpen ?? "topics"}
-              openDeck={deckToOpen}
-              firstName={user?.name.split(" ")[0]}
-            />
-          )}
-          {mode === "prep" && <PrepMode />}
-          {mode === "admin" && user?.isAdmin && <AdminMode />}
-        </Suspense>
-      )}
+        {mode === "game" ? (
+          <div className="wrap">
+            {/* key={trackId} remounts the whole view on a tab change, so each
+                track's progress and position start clean. */}
+            {track ? <TrackView key={track.id} track={track} /> : <TrackPicker tracks={TRACKS} onPick={setTrackId} />}
+          </div>
+        ) : (
+          <Suspense fallback={null}>
+            {mode === "home" && (
+              <HomeMode firstName={user ? (user.name.split(" ")[0] ?? null) : null} onOpen={openFromHome} />
+            )}
+            {mode === "cards" && (
+              <CardsMode
+                key={deckToOpen ?? "topics"}
+                openDeck={deckToOpen}
+                firstName={user?.name.split(" ")[0]}
+              />
+            )}
+            {mode === "prep" && <PrepMode />}
+            {mode === "admin" && user?.isAdmin && <AdminMode />}
+          </Suspense>
+        )}
+      </MaybeAds>
+      <SiteFooter
+        onStudyCards={() => {
+          setDeckToOpen(undefined);
+          setMode("cards");
+          window.scrollTo({ top: 0 });
+        }}
+      />
     </>
   );
 }

@@ -6,7 +6,8 @@
      - on Vercel, one serverless function (api/handler.ts)
 
    Routes: /api/me, /auth/google, /auth/google/callback, /auth/logout,
-           /api/progress, /api/llm, /api/admin/overview
+           /api/progress, /api/llm, /api/admin/overview, /api/admin/messages,
+           /api/contact
    ===================================================================== */
 
 import { randomBytes } from "node:crypto";
@@ -18,6 +19,7 @@ import { Sessions } from "./session.js";
 import { Mongo } from "./db.js";
 import { FileUserStore, MongoUserStore } from "./users.js";
 import { adminMiddleware, isAdmin, parseAdminEmails } from "./admin.js";
+import { contactMiddleware } from "./contact.js";
 
 export type Env = Record<string, string | undefined>;
 
@@ -53,6 +55,7 @@ export function buildApi(env: Env, root: string): Connect.NextHandleFunction[] {
       isAdmin: (req) => isAdmin(req, sessions, adminEmails),
     }),
     adminMiddleware({ adminEmails, sessions, users, mongo }),
+    contactMiddleware({ mongo, sessions }),
     progressMiddleware({ mongo, sessions }),
     nvidiaMiddleware({
       apiKey: env.NVIDIA_API_KEY,

@@ -15,7 +15,7 @@ export type Theme = "light" | "dark";
 export const THEME_KEY = "interview-prep-theme";
 
 const systemTheme = (): Theme =>
-  window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
 
 function storedTheme(): Theme | null {
   try {

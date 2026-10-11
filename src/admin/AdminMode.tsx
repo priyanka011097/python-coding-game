@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { HomeMode } from "../home/HomeMode";
 import { pctLabel, summarise } from "../home/progressData";
 import type { HomeSummary } from "../home/progressData";
+import { AdminMessages } from "./AdminMessages";
 import "./admin.css";
 
 interface AdminUser {
@@ -262,6 +263,8 @@ export function AdminMode() {
           )}
         </>
       )}
+
+      <AdminMessages />
     </div>
   );
 }

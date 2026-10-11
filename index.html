@@ -7,7 +7,72 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#000000" />
-    <title>Interview Prep</title>
+    <!-- SEO. __ORIGIN__ is replaced at build time with the site's address
+         (APP_URL), and title / description / canonical are rewritten per page
+         by server/seoPlugin.ts when the pages are pre-rendered. -->
+    <title>Interview Prep: coding drills, interview flashcards and an AI interviewer</title>
+    <meta name="description" content="Practise for technical interviews one question at a time: 357 fill-in-the-blank coding questions, 1,103 interview flashcards and an AI interviewer across 35 topics, with a readiness score that shows how ready you are." />
+    <link rel="canonical" href="__ORIGIN__/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Interview Prep" />
+    <meta property="og:title" content="Interview Prep: be ready for your next interview, one question at a time" />
+    <meta property="og:description" content="357 coding questions, 1,103 interview flashcards and an AI interviewer across 35 topics. A product from buildwithpriyanka.in." />
+    <meta property="og:url" content="__ORIGIN__/" />
+    <meta property="og:image" content="__ORIGIN__/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Interview Prep: be ready for your next interview, one question at a time." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Interview Prep: be ready for your next interview, one question at a time" />
+    <meta name="twitter:description" content="357 coding questions, 1,103 interview flashcards and an AI interviewer across 35 topics." />
+    <meta name="twitter:image" content="__ORIGIN__/og-image.png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "__ORIGIN__/#org",
+            "name": "Build with Priyanka",
+            "url": "https://buildwithpriyanka.in",
+            "email": "shahasanepriyanka@gmail.com"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "__ORIGIN__/#site",
+            "name": "Interview Prep",
+            "url": "__ORIGIN__/",
+            "publisher": { "@id": "__ORIGIN__/#org" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "WebApplication",
+            "name": "Interview Prep",
+            "url": "__ORIGIN__/",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Any (web browser)",
+            "description": "Coding drills, interview flashcards and an AI interviewer that asks one question at a time, from basics to expert, and shows how ready you are.",
+            "publisher": { "@id": "__ORIGIN__/#org" },
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+          }
+        ]
+      }
+    </script>
+    <!-- The landing page below is pre-rendered for search engines. A
+         returning signed-in visitor (src/auth/signedInHint.ts) goes straight
+         to the app, so hide it for them before it paints. -->
+    <script>
+      try {
+        if (location.pathname === "/" && localStorage.getItem("ip_signed_in") === "1") {
+          document.write("<style>[data-prerendered]{display:none}</style>");
+        }
+      } catch (e) {}
+    </script>
     <!-- Pick the theme before anything paints, so there is no flash of the
          wrong one. Same rule as src/theme/theme.ts: saved choice, else the
          system setting. -->

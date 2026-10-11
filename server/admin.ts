@@ -2,6 +2,7 @@
    admin.ts — the admin page's data.
 
      GET /api/admin/overview -> { users: [{ …profile, lastActiveAt, entries }] }
+     GET /api/admin/messages -> { messages: [{ name, email, message, createdAt }] }
 
    Only for signed-in users whose Google email is listed in ADMIN_EMAILS
    (comma-separated). The check happens here, on the server, for every
@@ -19,6 +20,7 @@ import type { Mongo } from "./db.js";
 import { describeDbError } from "./db.js";
 import type { Sessions } from "./session.js";
 import type { UserStore } from "./users.js";
+import type { MessageDoc } from "./contact.js";
 
 export interface AdminOptions {
   adminEmails: ReadonlySet<string>;
@@ -69,6 +71,28 @@ export function adminMiddleware(opts: AdminOptions): Connect.NextHandleFunction 
       return;
     }
     const path = new URL(req.url, "http://local").pathname;
+    if (path === "/api/admin/messages" && req.method === "GET") {
+      void (async () => {
+        try {
+          if (!opts.mongo) {
+            json(res, 200, { stored: false, messages: [] });
+            return;
+          }
+          const col = await opts.mongo.collection<MessageDoc>("messages");
+          const docs = await col.find({}).sort({ createdAt: -1 }).limit(500).toArray();
+          json(res, 200, {
+            stored: true,
+            messages: docs.map((d) => ({
+              id: String(d._id), name: d.name, email: d.email, message: d.message,
+              createdAt: d.createdAt.toISOString(), userId: d.userId,
+            })),
+          });
+        } catch (err) {
+          json(res, 503, { error: describeDbError(err) });
+        }
+      })();
+      return;
+    }
     if (path !== "/api/admin/overview" || req.method !== "GET") {
       json(res, 404, { error: "Not found" });
       return;

@@ -176,6 +176,30 @@
 .pp-ready { padding: 18px; position: sticky; top: 90px; }
 .pp-ready__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .pp-ready__head .pp-label { margin: 0; }
+.pp-ready__head .pp-label { white-space: nowrap; }
+.pp-ready__numrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pp-ready__numrow .pp-ready__tag { white-space: nowrap; }
+.pp-ready__toggle, .pp-ready__bar {
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  border: 1px solid var(--line-2); background: transparent; color: var(--ink-2); font: inherit;
+}
+.pp-ready__toggle { width: 28px; height: 28px; border-radius: 7px; flex: none; }
+@media (hover: hover) { .pp-ready__toggle:hover, .pp-ready__bar:hover { color: var(--ink); background: var(--surface-2); } }
+/* Collapsed. Wide screens: a slim vertical tab on the right, and the
+   question column grows into the freed space. Phones: one horizontal line. */
+.pp-ready--collapsed { padding: 0; }
+.pp-ready__bar { gap: 10px; border: none; border-radius: 12px; }
+.pp-ready__bar .pp-label { margin: 0; white-space: nowrap; }
+.pp-ready__mini { font-family: "IBM Plex Mono", monospace; font-size: 14px; color: var(--ink); }
+.pp-chev { transition: transform .2s ease; flex: none; }
+.pp-layout:has(.pp-ready--collapsed) { grid-template-columns: minmax(0, 1fr) 52px; }
+.pp-ready--collapsed .pp-ready__bar {
+  width: 52px; min-height: 260px; padding: 14px 0;
+  flex-direction: column; justify-content: flex-start;
+}
+.pp-ready--collapsed .pp-label, .pp-ready--collapsed .pp-ready__mini { writing-mode: vertical-rl; transform: rotate(180deg); }
+.pp-chev--open { transform: rotate(-90deg); }   /* ›  hide to the right */
+.pp-chev--closed { transform: rotate(90deg); }  /* ‹  bring it back */
 .pp-ready__tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--warn-soft); color: var(--warn); }
 .pp-ready__tag--ok { background: var(--pass-soft); color: var(--pass); }
 .pp-ready__num { font-family: "IBM Plex Mono", monospace; font-size: 36px; font-weight: 600; margin: 8px 0; }
@@ -214,8 +238,14 @@
 
 /* ---------- phones ---------- */
 @media (max-width: 860px) {
-  .pp-layout { grid-template-columns: minmax(0, 1fr); }
+  .pp-layout, .pp-layout:has(.pp-ready--collapsed) { grid-template-columns: minmax(0, 1fr); }
   .pp-ready { position: static; order: -1; }
+  .pp-ready--collapsed .pp-ready__bar { width: 100%; min-height: 0; padding: 12px 14px; flex-direction: row; }
+  .pp-ready--collapsed .pp-label, .pp-ready--collapsed .pp-ready__mini { writing-mode: horizontal-tb; transform: none; }
+  .pp-ready--collapsed .pp-ready__mini { margin-left: auto; }
+  .pp-ready--collapsed .pp-ready__bar .pp-chev { order: 3; }
+  .pp-chev--open { transform: rotate(180deg); }  /* ⌃ fold up */
+  .pp-chev--closed { transform: none; }          /* ⌄ unfold */
 }
 @media (max-width: 680px) {
   .pp { padding: 16px 16px 48px; }

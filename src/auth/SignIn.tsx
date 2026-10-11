@@ -8,6 +8,8 @@
 
 import { ThemeToggle } from "../theme/ThemeToggle";
 import { LandingDuck } from "./LandingDuck";
+import { AdLayout } from "../ads/AdLayout";
+import { SiteFooter } from "../info/InfoPages";
 import "./landing.css";
 
 interface SignInProps {
@@ -28,11 +30,14 @@ function GoogleLogo() {
 
 /** Any address other than localhost: Google will refuse it (an https://
  *  deployment is fine, since it sets APP_URL and is not a bare IP). */
+/* `typeof window` guards: this page is also pre-rendered to HTML at build
+   time (server/seoPlugin.ts), where there is no browser. */
+const IN_BROWSER = typeof window !== "undefined";
 const wrongHost =
-  window.location.protocol === "http:" && window.location.hostname !== "localhost";
+  IN_BROWSER && window.location.protocol === "http:" && window.location.hostname !== "localhost";
 
 /** Come back to the page you asked for (e.g. /admin) after signing in. */
-const here = window.location.pathname;
+const here = IN_BROWSER ? window.location.pathname : "/";
 const signInHref = here && here !== "/" ? `/auth/google?next=${encodeURIComponent(here)}` : "/auth/google";
 
 function GoogleButton({ size = "lg" }: { size?: "lg" | "sm" }) {
@@ -126,6 +131,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
         </div>
       </header>
 
+      <AdLayout>
       <main>
         <section className="lp-hero">
           <div className="lp-hero__text">
@@ -150,7 +156,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
 
             <div className="lp-cta">
               <GoogleButton />
-              <span className="lp-cta__hint">Free. New here? Signing in creates your account.</span>
+              <span className="lp-cta__hint">New here? Signing in creates your account.</span>
             </div>
 
             {error && (
@@ -184,6 +190,9 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           </div>
           <p className="lp-topics">
             <span>Interview Prep covers</span> {TOPICS}
+          </p>
+          <p className="lp-topics">
+            <a href="/cards">Browse interview flashcards →</a> React, system design, DSA, databases and more.
           </p>
         </section>
 
@@ -234,14 +243,10 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
           <GoogleButton />
         </section>
       </main>
+      </AdLayout>
 
       <LandingDuck />
-      <footer className="lp-foot">
-        A product from{" "}
-        <a href="https://buildwithpriyanka.in" target="_blank" rel="noopener">
-          buildwithpriyanka.in
-        </a>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

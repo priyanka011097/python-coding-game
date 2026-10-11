@@ -68,6 +68,17 @@
   font-size: 13px; font-weight: 600;
 }
 
+/* ---------- contact messages ---------- */
+.ad-messages { margin-top: 28px; }
+.ad-messages h2 { margin: 0 0 12px; font-size: 17px; }
+.ad-messages ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ad-messages li { padding: 14px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.ad-msg__head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 13.5px; }
+.ad-msg__head a { color: var(--accent-ink); }
+.ad-msg__head .ad-muted { margin-left: auto; }
+.ad-msg__tag { font-size: 11px; padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--accent-ink); }
+.ad-messages p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; white-space: pre-wrap; color: var(--ink); }
+
 /* ---------- one user ---------- */
 .ad-detail-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
 .ad-who { display: flex; align-items: center; gap: 12px; min-width: 0; }

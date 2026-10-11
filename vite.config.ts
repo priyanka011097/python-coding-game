@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { apiPlugin } from "./server/app.js";
+import { seoPages } from "./server/seoPlugin.js";
 
 export default defineConfig(({ mode }) => {
   // The "" prefix loads every variable, including ones without VITE_.
@@ -9,6 +10,6 @@ export default defineConfig(({ mode }) => {
 
   // The same API that api/handler.ts serves on Vercel.
   return {
-    plugins: [react(), apiPlugin(env, process.cwd())],
+    plugins: [react(), apiPlugin(env, process.cwd()), seoPages(env)],
   };
 });
