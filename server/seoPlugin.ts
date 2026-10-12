@@ -53,6 +53,25 @@ function analyticsTag(env: Record<string, string | undefined>): string {
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag("js",new Date());gtag("config","${id}");</script>
 `;
 }
+
+/** The AdSense publisher ID (ca-pub-…) from ADSENSE_CLIENT, or "" when unset. */
+export function adsenseClient(env: Record<string, string | undefined>): string {
+  const id = env.ADSENSE_CLIENT?.trim() ?? "";
+  return /^ca-pub-\d{10,20}$/.test(id) ? id : "";
+}
+
+/** The AdSense script and account tag, when ADSENSE_CLIENT is set. AdSense
+ *  uses them to check the site during review, and they load Auto ads. */
+function adsenseTag(env: Record<string, string | undefined>): string {
+  const id = adsenseClient(env);
+  if (!id) return "";
+  return `<meta name="google-adsense-account" content="${id}">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${id}" crossorigin="anonymous"></script>
+`;
+}
+
+/** Everything added to the <head> of built pages: analytics and ads. */
+const headTags = (env: Record<string, string | undefined>): string => analyticsTag(env) + adsenseTag(env);
 const withAnalytics = (html: string, tag: string): string => (tag ? html.replace("</head>", `${tag}</head>`) : html);
 
 /** The public address used in canonical links and the sitemap. */
@@ -81,7 +100,7 @@ export function seoPages(env: Record<string, string | undefined>): Plugin {
         if (env.GOOGLE_SITE_VERIFICATION) {
           out = out.replace("</head>", `  <meta name="google-site-verification" content="${env.GOOGLE_SITE_VERIFICATION.replace(/"/g, "")}" />\n  </head>`);
         }
-        return ctx.server ? out : withAnalytics(out, analyticsTag(env));
+        return ctx.server ? out : withAnalytics(out, headTags(env));
       },
     },
 
@@ -124,7 +143,7 @@ export function seoPages(env: Record<string, string | undefined>): Plugin {
         const { DECKS } = (await import(pathToFileURL(outfile).href)) as { DECKS: readonly Deck[] };
         const origin = publicOrigin(env);
         const out = join(config.root, config.build.outDir);
-        const tag = analyticsTag(env);
+        const tag = headTags(env);
         // Every static page gets the analytics tag (index.html has it already).
         const writePage = (file: string, html: string): void => writeFileSync(file, withAnalytics(html, tag));
         mkdirSync(join(out, "cards"), { recursive: true });
@@ -133,6 +152,9 @@ export function seoPages(env: Record<string, string | undefined>): Plugin {
         writeFileSync(join(out, "sitemap.xml"), renderSitemap(origin, DECKS));
         writeFileSync(join(out, "robots.txt"), renderRobots(origin));
         writePage(join(out, "404.html"), render404(origin, DECKS));
+        // ads.txt: says Google may sell ads on this site (AdSense requires it).
+        const adsId = adsenseClient(env);
+        if (adsId) writeFileSync(join(out, "ads.txt"), `google.com, ${adsId.replace(/^ca-/, "")}, DIRECT, f08c47fec0942fa0\n`);
         config.logger.info(`  public Study Cards: ${DECKS.length + 1} pages, sitemap.xml, robots.txt, 404 (${origin})`);
 
         /* Pre-render the app's public pages (landing, About, Privacy,
@@ -144,6 +166,8 @@ export function seoPages(env: Record<string, string | undefined>): Plugin {
           configFile: false,
           root: config.root,
           logLevel: "silent",
+          // Same build-time constants as the app (e.g. __ADSENSE__).
+          define: config.define,
           build: { ssr: "src/prerender.tsx", outDir: ssrOut, emptyOutDir: true, rollupOptions: { output: { format: "esm", entryFileNames: "prerender.mjs" } } },
         });
         const { PAGES } = (await import(pathToFileURL(join(ssrOut, "prerender.mjs")).href)) as { PAGES: readonly PrerenderedPage[] };

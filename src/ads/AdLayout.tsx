@@ -6,18 +6,53 @@
      >= 1600px  300px rails  (300x600 "half page")
    Below 1200px the rails are hidden so the content keeps its room.
 
-   Each rail holds one sticky slot marked data-ad-slot="left" / "right",
-   ready for an ad network's tag. The slots are empty and invisible to
-   users; in development a faint outline shows where ads will go.
+   Each rail holds one sticky slot. With ADSENSE_CLIENT and
+   ADSENSE_SLOT_LEFT / ADSENSE_SLOT_RIGHT set (Vercel environment), it shows
+   that AdSense ad unit; otherwise it stays empty and invisible. In
+   development a faint outline shows where ads will go.
    ===================================================================== */
 
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import "./ads.css";
 
-function AdSlot({ side }: { side: "left" | "right" }) {
+declare global {
+  interface Window {
+    adsbygoogle?: unknown[];
+  }
+}
+
+const ADS = __ADSENSE__;
+
+/** One AdSense ad unit. Pushed once per mount; AdSense fills the <ins>. */
+function AdUnit({ slot }: { slot: string }) {
+  const ref = useRef<HTMLModElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || el.dataset.adsbygoogleStatus) return;
+    try {
+      (window.adsbygoogle = window.adsbygoogle ?? []).push({});
+    } catch {
+      /* blocked by an ad blocker: leave the space empty */
+    }
+  }, []);
   return (
-    <div className="ad-slot" data-ad-slot={side} aria-hidden="true">
-      {import.meta.env.DEV && <span className="ad-slot__dev">Ad space · {side}</span>}
+    <ins
+      ref={ref}
+      className="adsbygoogle"
+      style={{ display: "block", width: "100%", height: "100%" }}
+      data-ad-client={ADS.client}
+      data-ad-slot={slot}
+    />
+  );
+}
+
+function AdSlot({ side }: { side: "left" | "right" }) {
+  const slot = ADS[side];
+  const live = !import.meta.env.DEV && ADS.client !== "" && slot !== "";
+  return (
+    <div className="ad-slot" data-ad-side={side}>
+      {live ? <AdUnit slot={slot} /> : import.meta.env.DEV && <span className="ad-slot__dev" aria-hidden="true">Ad space · {side}</span>}
     </div>
   );
 }
