@@ -54,9 +54,15 @@ function analyticsTag(env: Record<string, string | undefined>): string {
 `;
 }
 
-/** The AdSense publisher ID (ca-pub-…) from ADSENSE_CLIENT, or "" when unset. */
+/** The site's AdSense publisher ID. Not a secret: it is in every page that
+ *  shows ads. ADSENSE_CLIENT overrides it (either "ca-pub-…" or "pub-…"),
+ *  and ADSENSE_CLIENT=off turns AdSense off. */
+const DEFAULT_ADSENSE_CLIENT = "ca-pub-1248019476008076";
+
 export function adsenseClient(env: Record<string, string | undefined>): string {
-  const id = env.ADSENSE_CLIENT?.trim() ?? "";
+  const raw = (env.ADSENSE_CLIENT ?? "").trim().replace(/^["']|["']$/g, "");
+  if (raw.toLowerCase() === "off") return "";
+  const id = raw === "" ? DEFAULT_ADSENSE_CLIENT : raw.replace(/^pub-/, "ca-pub-");
   return /^ca-pub-\d{10,20}$/.test(id) ? id : "";
 }
 
