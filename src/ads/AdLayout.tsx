@@ -43,6 +43,8 @@ function AdUnit({ slot }: { slot: string }) {
       style={{ display: "block", width: "100%", height: "100%" }}
       data-ad-client={ADS.client}
       data-ad-slot={slot}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
     />
   );
 }

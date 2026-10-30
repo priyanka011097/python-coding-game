@@ -59,6 +59,17 @@ function analyticsTag(env: Record<string, string | undefined>): string {
  *  and ADSENSE_CLIENT=off turns AdSense off. */
 const DEFAULT_ADSENSE_CLIENT = "ca-pub-1248019476008076";
 
+/** The "Ad1" display unit (responsive), used in both side ad spaces. */
+const DEFAULT_ADSENSE_SLOT = "4630429935";
+
+/** The ad unit for one side space: ADSENSE_SLOT_LEFT / ADSENSE_SLOT_RIGHT,
+ *  else the default unit. "" when AdSense is off. */
+export function adsenseSlot(env: Record<string, string | undefined>, side: "left" | "right"): string {
+  if (!adsenseClient(env)) return "";
+  const raw = (side === "left" ? env.ADSENSE_SLOT_LEFT : env.ADSENSE_SLOT_RIGHT)?.trim() ?? "";
+  return /^\d+$/.test(raw) ? raw : DEFAULT_ADSENSE_SLOT;
+}
+
 export function adsenseClient(env: Record<string, string | undefined>): string {
   const raw = (env.ADSENSE_CLIENT ?? "").trim().replace(/^["']|["']$/g, "");
   if (raw.toLowerCase() === "off") return "";
