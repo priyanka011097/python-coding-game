@@ -15,7 +15,7 @@ import "./info.css";
 export const OWNER = "Build with Priyanka";
 export const OWNER_URL = "https://buildwithpriyanka.in";
 export const CONTACT_EMAIL = "shahasanepriyanka@gmail.com";
-const UPDATED = "12 October 2026";
+const UPDATED = "15 November 2026";
 
 export const INFO_PATHS = ["/about", "/privacy", "/contact"] as const;
 export type InfoPath = (typeof INFO_PATHS)[number];
@@ -95,7 +95,8 @@ function About() {
       </ul>
       <p>
         A dashboard brings it together, with a readiness score that rewards doing well on hard questions in
-        every topic. Progress is saved to your account, so you can pick up on any device.
+        every topic. No account is needed: your progress is kept in your browser. Sign in with Google to write
+        your own answers on cards and keep your progress on every device.
       </p>
       <h2>Who makes it</h2>
       <p>
@@ -123,6 +124,10 @@ function Privacy() {
       </p>
 
       <h2>1. Information we collect</h2>
+      <p>
+        You can use {BRAND} without an account. Your progress is then kept only in your browser’s local storage, and
+        the questions and answers you send to the AI interviewer are processed as described in section 3.
+      </p>
       <ul>
         <li><b>Your Google account details.</b> When you sign in with Google we receive your name, email address, profile picture and Google account ID. We never see your Google password.</li>
         <li><b>Your practice progress.</b> Your Coding Game answers, Study Cards you viewed, flagged or edited, your AI Interview Prep questions, answers, scores and levels, the subjects you chose, and your settings. This is stored in our database linked to your account, and in your browser’s local storage.</li>

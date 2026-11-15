@@ -1,0 +1,12 @@
+/* google-btn.css — the "Continue with Google" button (GoogleButton.tsx). */
+
+.google-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+  border-radius: 10px; text-decoration: none; font-weight: 600;
+  background: #fff; color: #1f1f1f; border: 1px solid #dadce0;
+  font-family: Roboto, "IBM Plex Sans", sans-serif;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .08);
+}
+.google-btn--lg { min-height: 48px; padding: 0 22px; font-size: 15.5px; }
+.google-btn--sm { min-height: 40px; padding: 0 16px; font-size: 14px; }
+@media (hover: hover) { .google-btn:hover { background: #f6f8fb; } }

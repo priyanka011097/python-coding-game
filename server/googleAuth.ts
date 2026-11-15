@@ -22,6 +22,10 @@ import type { Sessions } from "./session.js";
 import { NEXT_COOKIE, SESSION_COOKIE, STATE_COOKIE, clearCookie, parseCookies, randomToken, setCookie } from "./session.js";
 import type { UserStore } from "./users.js";
 
+/** Where to land after signing in: a path on this site, optionally with a
+ *  simple query (e.g. /?open=cards&deck=DSA). Never another site. */
+const SAFE_NEXT = /^\/[A-Za-z0-9/_-]*(\?[A-Za-z0-9=&%._-]*)?$/;
+
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const ISSUERS = new Set(["accounts.google.com", "https://accounts.google.com"]);
@@ -114,7 +118,7 @@ export function googleAuthMiddleware(opts: GoogleAuthOptions): Connect.NextHandl
       setCookie(res, STATE_COOKIE, state, { maxAgeSeconds: 600, secure });
       // Only a same-site path, never another site ("//evil.com" or a full URL).
       const next = url.searchParams.get("next");
-      if (next && /^\/[A-Za-z0-9/_-]*$/.test(next) && !next.startsWith("//")) {
+      if (next && SAFE_NEXT.test(next) && !next.startsWith("//")) {
         setCookie(res, NEXT_COOKIE, next, { maxAgeSeconds: 600, secure });
       }
       const params = new URLSearchParams({
@@ -179,7 +183,7 @@ export function googleAuthMiddleware(opts: GoogleAuthOptions): Connect.NextHandl
           setCookie(res, SESSION_COOKIE, session.value, { maxAgeSeconds: session.maxAgeSeconds, secure });
           const next = parseCookies(req)[NEXT_COOKIE];
           clearCookie(res, NEXT_COOKIE, secure);
-          const landing = next && /^\/[A-Za-z0-9/_-]*$/.test(next) && !next.startsWith("//") ? next : "/";
+          const landing = next && SAFE_NEXT.test(next) && !next.startsWith("//") ? next : "/";
           redirect(res, isNew ? `${landing}?welcome=new` : landing);
         } catch (err) {
           // A failed database write surfaces as its own error, not as Google's.

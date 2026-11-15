@@ -23,3 +23,23 @@ export function setSignedInHint(on: boolean): void {
     /* storage blocked: the hint is only a nicety */
   }
 }
+
+/* Someone who pressed "Start practising" (or opened the app from a link)
+   uses the app without an account; next visit they skip the landing page. */
+const STARTED_KEY = "ip_started";
+
+export function hasStarted(): boolean {
+  try {
+    return localStorage.getItem(STARTED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function markStarted(): void {
+  try {
+    localStorage.setItem(STARTED_KEY, "1");
+  } catch {
+    /* storage blocked: they see the landing page again next time */
+  }
+}

@@ -17,6 +17,7 @@ import type { HomeTarget } from "./home/HomeMode";
 import { initialTrack, rememberTrack } from "./home/subjects";
 import { TrackPicker } from "./components/TrackPicker";
 import { UserMenu } from "./auth/UserMenu";
+import { signInUrl } from "./auth/GoogleButton";
 import { ThemeToggle } from "./theme/ThemeToggle";
 import { DuckHost } from "./duck/DuckHost";
 import { AdLayout } from "./ads/AdLayout";
@@ -67,14 +68,16 @@ export interface Launch {
 }
 
 interface MainAppProps {
-  /** null when Google sign-in is not configured and the app runs open. */
+  /** null for a guest (or when Google sign-in is not configured). */
   user: AuthUser | null;
+  /** A guest who can sign in (Google sign-in is configured). */
+  canSignIn: boolean;
   welcome: boolean;
   launch: Launch;
   onLogout: () => Promise<void>;
 }
 
-export default function MainApp({ user, welcome, launch, onLogout }: MainAppProps) {
+export default function MainApp({ user, canSignIn, welcome, launch, onLogout }: MainAppProps) {
   // Where to open: /admin (admins only), ?open=cards (see App.tsx), else Home.
   const [mode, setMode] = useState<AppMode>(() =>
     window.location.pathname.replace(/\/+$/, "") === "/admin" && user?.isAdmin ? "admin" : launch.cards ? "cards" : "home",
@@ -160,6 +163,11 @@ export default function MainApp({ user, welcome, launch, onLogout }: MainAppProp
             {/* Admin has no button: admins open it at /admin. */}
             <ThemeToggle />
             {user && <UserMenu user={user} onLogout={onLogout} />}
+            {!user && canSignIn && (
+              <a className="usermenu__out signin-link" href={signInUrl()} title="Sign in to keep your progress on every device">
+                Sign in
+              </a>
+            )}
           </div>
         </div>
       </header>
@@ -193,6 +201,7 @@ export default function MainApp({ user, welcome, launch, onLogout }: MainAppProp
                 key={deckToOpen ?? "topics"}
                 openDeck={deckToOpen}
                 firstName={user?.name.split(" ")[0]}
+                signInToEdit={!user && canSignIn}
               />
             )}
             {mode === "prep" && <PrepMode />}

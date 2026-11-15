@@ -16,7 +16,6 @@ import type { Deck } from "../src/cards/types.js";
 import { slugOf } from "../src/cards/slug.js";
 
 /** How many cards of each deck are public. */
-export const PUBLIC_CARDS = 5;
 
 export { slugOf };
 
@@ -80,12 +79,8 @@ h1 small{display:block;font-size:13px;font-weight:500;color:var(--ink-3);letter-
 .a{font-size:16px;line-height:1.65;color:var(--ink)}.a p{margin:0 0 10px}
 pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0;overflow-x:auto;font-size:13px;line-height:1.55}
 code{font-family:"IBM Plex Mono",ui-monospace,monospace}
-.lock .ghost{filter:blur(5px);opacity:.7;user-select:none;pointer-events:none}
-.lock .ghost i{display:block;height:12px;border-radius:6px;background:var(--line-2);margin:10px 0}
-.lock .over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
-.lock .over b{font-size:19px}.lock .over p{margin:0;color:var(--ink-2);max-width:40ch}
-.gbtn{display:inline-flex;align-items:center;gap:12px;min-height:46px;padding:0 22px;margin-top:4px;border-radius:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;font-family:Roboto,"IBM Plex Sans",sans-serif;font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 1px 2px rgba(16,24,40,.08)}
-.gbtn:hover{background:#f6f8fb}
+.cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px;padding:16px 18px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line)}
+.cta p{margin:0;color:var(--ink-2);font-size:14px}.cta b{color:var(--ink)}
 .foot{display:none;gap:12px;margin-top:24px}.js .foot{display:flex}
 .nav{flex:1;padding:14px 18px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font:inherit;font-size:15px;font-weight:500;cursor:pointer}
 .nav.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
@@ -114,21 +109,20 @@ const THEME_JS = `(function(){var t=null;try{t=localStorage.getItem("interview-p
 
 const TOGGLE_JS = `document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".tt");if(!b)return;var r=document.documentElement,n=r.getAttribute("data-theme")==="light"?"dark":"light";r.setAttribute("data-theme",n);try{localStorage.setItem("interview-prep-theme",n)}catch(x){}});`;
 
-/* One card at a time, Previous / Next, arrow keys, read aloud. The last
-   "card" is the locked one that asks the visitor to sign in. */
 /* Signed in already? Then this page is the wrong place to study: open the
    app (on this deck), where progress is saved. Runs on every public page. */
 const SIGNED_IN_JS = `fetch("/api/me",{credentials:"same-origin",cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(m){if(m&&m.user){var d=document.body.dataset.deck;location.replace("/?open=cards"+(d?"&deck="+encodeURIComponent(d):""))}}).catch(function(){});`;
 
+/* One card at a time, Previous / Next, arrow keys, read aloud. */
 const DECK_JS = `(function(){var cards=[].slice.call(document.querySelectorAll(".deck>.fc"));if(!cards.length)return;var total=+document.body.dataset.total,i=0,deck=document.body.dataset.deck;
-/* Not signed in: remember viewed cards in the same place the app keeps them,
-   so they count on the dashboard once this visitor signs up. */
+/* Remember viewed cards in the same place the app keeps them, so they
+   count on the dashboard when this visitor opens the app. */
 function mark(n){try{var k="studycards_completed_v1",v=JSON.parse(localStorage.getItem(k)||"{}");if(!v[deck+"::"+n]){v[deck+"::"+n]=1;localStorage.setItem(k,JSON.stringify(v))}}catch(e){}}
 var prev=document.getElementById("prev"),next=document.getElementById("next"),counter=document.getElementById("counter"),fill=document.getElementById("fill"),seen=document.getElementById("seen");
 function stop(){if(window.speechSynthesis)speechSynthesis.cancel();[].forEach.call(document.querySelectorAll(".read.on"),function(b){b.classList.remove("on")})}
-function show(n){stop();i=Math.max(0,Math.min(cards.length-1,n));cards.forEach(function(c,k){c.classList.toggle("show",k===i)});var locked=cards[i].classList.contains("lock");
-counter.textContent=(locked?i:i+1)+" / "+total;fill.style.width=((Math.min(i+1,cards.length-1))/total*100)+"%";seen.textContent=Math.min(i+1,cards.length-1)+" / "+total+" viewed";
-prev.disabled=i===0;next.disabled=i===cards.length-1;if(!locked)mark(i);}
+function show(n){stop();i=Math.max(0,Math.min(cards.length-1,n));cards.forEach(function(c,k){c.classList.toggle("show",k===i)});
+counter.textContent=(i+1)+" / "+total;fill.style.width=((i+1)/total*100)+"%";seen.textContent=(i+1)+" / "+total+" viewed";
+prev.disabled=i===0;next.disabled=i===cards.length-1;mark(i);}
 prev.onclick=function(){show(i-1)};next.onclick=function(){show(i+1)};
 document.addEventListener("keydown",function(e){if(e.key==="ArrowRight")show(i+1);else if(e.key==="ArrowLeft")show(i-1)});
 if(!("speechSynthesis" in window))[].forEach.call(document.querySelectorAll(".read"),function(b){b.remove()});
@@ -136,9 +130,6 @@ document.addEventListener("click",function(e){var b=e.target.closest&&e.target.c
 var a=b.closest(".fc").querySelector(".a").cloneNode(true);[].forEach.call(a.querySelectorAll("pre"),function(p){p.textContent=". The code is shown on screen. "});
 var u=new SpeechSynthesisUtterance(a.textContent.replace(/\\s+/g," ").replace(/([.!?:])(\\s*\\.)+/g,"$1").trim());u.lang="en-US";u.onend=u.onerror=function(){b.classList.remove("on")};b.classList.add("on");speechSynthesis.speak(u)});
 show(0)})();`;
-
-/* Google's "G", for the sign-in button (same as the app's landing page). */
-const GOOGLE_G = `<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
 
 const SUN = `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
 
@@ -166,7 +157,7 @@ ${opts.noindex ? `<meta name="robots" content="noindex">` : `<link rel="canonica
 ${opts.jsonLd ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
 </head>
 <body${opts.total ? ` data-total="${opts.total}"` : ""}${opts.deck ? ` data-deck="${esc(opts.deck)}"` : ""}>
-<header class="top"><div class="bar"><a class="brand" href="/"><span class="mark">HT</span>HyperTransformer AI</a><div class="end"><button type="button" class="tt" aria-label="Switch light or dark mode">${SUN}</button><a class="signin" href="/">Sign in</a></div></div></header>
+<header class="top"><div class="bar"><a class="brand" href="/"><span class="mark">HT</span>HyperTransformer AI</a><div class="end"><button type="button" class="tt" aria-label="Switch light or dark mode">${SUN}</button><a class="signin" href="/?open=cards">Open the app</a></div></div></header>
 ${opts.body}
 <footer><span>A product from <a class="own" href="https://buildwithpriyanka.in">buildwithpriyanka.in</a></span><a href="/cards">Study cards</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/contact">Contact</a></footer>
 <script>${TOGGLE_JS}${SIGNED_IN_JS}${opts.script ?? ""}</script>
@@ -178,7 +169,7 @@ ${opts.body}
 export function renderIndex(origin: string, decks: readonly Deck[]): string {
   const total = decks.reduce((n, d) => n + d.cards.length, 0);
   const items = decks
-    .map((d) => `<li><a class="tc" href="/cards/${slugOf(d.name)}"><span class="t"><span class="i">${d.icon}</span><span><b>${esc(d.name)}</b><small>${Math.min(PUBLIC_CARDS, d.cards.length)} to try · ${d.cards.length} cards</small></span></span><span class="bar2"></span></a></li>`)
+    .map((d) => `<li><a class="tc" href="/cards/${slugOf(d.name)}"><span class="t"><span class="i">${d.icon}</span><span><b>${esc(d.name)}</b><small>${d.cards.length} cards</small></span></span><span class="bar2"></span></a></li>`)
     .join("\n");
   return page({
     origin,
@@ -193,7 +184,7 @@ export function renderIndex(origin: string, decks: readonly Deck[]): string {
     description: `${total.toLocaleString("en")} interview questions with clear answers across ${decks.length} topics: React, JavaScript and TypeScript, backend, databases, system design, AI, DevOps, security, testing, DSA and Python coding problems.`,
     body: `<main class="sc">
 <h1 class="home-title">Interview Study Cards</h1>
-<p class="sub">Pick a topic to begin. Try the first ${PUBLIC_CARDS} cards of any deck, then sign in to study all ${total.toLocaleString("en")}.</p>
+<p class="sub">Pick a topic to begin: ${total.toLocaleString("en")} interview questions with clear answers, no sign-up needed.</p>
 <ul class="grid">
 ${items}
 </ul>
@@ -202,8 +193,7 @@ ${items}
 }
 
 export function renderDeck(origin: string, deck: Deck, decks: readonly Deck[]): string {
-  const shown = deck.cards.slice(0, PUBLIC_CARDS);
-  const rest = deck.cards.length - shown.length;
+  const shown = deck.cards;
   const cards = shown
     .map(
       (c) => `<article class="fc">
@@ -215,13 +205,6 @@ export function renderDeck(origin: string, deck: Deck, decks: readonly Deck[]): 
 </article>`,
     )
     .join("\n");
-  const locked =
-    rest > 0
-      ? `<article class="fc lock" aria-label="Sign in to see more cards">
-<div class="ghost" aria-hidden="true"><div class="label">Question</div><i style="width:70%"></i><div class="div"></div><div class="label">Answer</div><i></i><i style="width:92%"></i><i style="width:80%"></i><i style="width:60%"></i></div>
-<div class="over"><b>${rest} more ${esc(deck.name)} cards</b><p>Sign in with Google to study the whole deck, flag tricky answers and track your progress.</p><a class="gbtn" href="/auth/google">${GOOGLE_G}Continue with Google</a></div>
-</article>`
-      : "";
   const others = decks
     .filter((d) => d.name !== deck.name)
     .map((d) => `<a href="/cards/${slugOf(d.name)}">${esc(d.name)}</a>`)
@@ -263,9 +246,9 @@ export function renderDeck(origin: string, deck: Deck, decks: readonly Deck[]): 
 <div class="prog"><div class="track"><div class="fill" id="fill" style="width:${(1 / deck.cards.length) * 100}%"></div></div><span id="seen">1 / ${deck.cards.length} viewed</span></div>
 <div class="deck">
 ${cards}
-${locked}
 </div>
 <div class="foot"><button type="button" class="nav" id="prev">← Previous</button><button type="button" class="nav primary" id="next">Next →</button></div>
+<div class="cta"><p><b>Practise ${esc(deck.name)} in the app</b><br>Track your progress, flag tricky cards and write your own answers.</p><a class="pill" href="/?open=cards&amp;deck=${encodeURIComponent(deck.name)}">Open in the app</a></div>
 <p class="more"><b>More topics:</b> ${others}</p>
 </main>`,
   });

@@ -23,12 +23,14 @@ interface FlashcardProps {
   onToggleFlag: () => void;
   /** `null` drops the edit and restores the original answer. */
   onSaveEdit: (text: string | null) => void;
+  /** Set for guests: Edit calls this (to ask them to sign in) instead. */
+  onEditBlocked?: () => void;
 }
 
 const formatSpeed = (s: number): string => `${s}x`;
 
 export function Flashcard({
-  card, answer, edited, flagged, speech, onToggleFlag, onSaveEdit,
+  card, answer, edited, flagged, speech, onToggleFlag, onSaveEdit, onEditBlocked,
 }: FlashcardProps) {
   const [editing, setEditing] = useState<boolean>(false);
   const [draft, setDraft] = useState<string>("");
@@ -47,6 +49,10 @@ export function Flashcard({
   }, [editing]);
 
   const startEdit = (): void => {
+    if (onEditBlocked) {
+      onEditBlocked();
+      return;
+    }
     setDraft(answer);
     setEditing(true);
   };

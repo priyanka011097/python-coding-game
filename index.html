@@ -64,11 +64,12 @@
       }
     </script>
     <!-- The landing page below is pre-rendered for search engines. A
-         returning signed-in visitor (src/auth/signedInHint.ts) goes straight
-         to the app, so hide it for them before it paints. -->
+         returning visitor (signed in, or who opened the app before; see
+         src/auth/signedInHint.ts) goes straight to the app, so hide it for
+         them before it paints. -->
     <script>
       try {
-        if (location.pathname === "/" && localStorage.getItem("ip_signed_in") === "1") {
+        if (location.pathname === "/" && (localStorage.getItem("ip_signed_in") === "1" || localStorage.getItem("ip_started") === "1" || /[?&](open|start)\b/.test(location.search))) {
           document.write("<style>[data-prerendered]{display:none}</style>");
         }
       } catch (e) {}

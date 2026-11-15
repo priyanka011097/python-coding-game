@@ -120,6 +120,7 @@ header {
   border-radius: 7px; padding: 5px 11px; font: inherit; font-size: 12.5px; cursor: pointer;
 }
 @media (hover: hover) { .usermenu__out:hover:not(:disabled) { color: var(--ink); background: var(--surface-2); } }
+.signin-link { text-decoration: none; font-weight: 600; color: var(--ink); }
 
 .welcome {
   max-width: 880px; margin: 14px auto 0; padding: 10px 14px;

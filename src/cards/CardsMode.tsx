@@ -16,6 +16,7 @@ import {
 import { useSpeech } from "./hooks/useSpeech";
 import { bumpDuck, resetDuck } from "../duck/duckBus";
 import { Flashcard } from "./components/Flashcard";
+import { SignInModal } from "./components/SignInModal";
 import { FlaggedModal } from "./components/FlaggedModal";
 import { ProgressBar } from "./components/ProgressBar";
 import { SettingsModal } from "./components/SettingsModal";
@@ -42,9 +43,11 @@ interface CardsModeProps {
   openDeck?: string;
   /** The signed-in user's first name, for the greeting. */
   firstName?: string;
+  /** A guest: editing an answer asks them to sign in first. */
+  signInToEdit?: boolean;
 }
 
-export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
+export function CardsMode({ openDeck, firstName, signInToEdit = false }: CardsModeProps = {}) {
   const [screen, setScreen] = useState<CardsScreen>("home");
   const [subject, setSubject] = useState<string>(FIRST_DECK.name);
   const [index, setIndex] = useState<number>(0);
@@ -302,6 +305,7 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
               speech={speech}
               onToggleFlag={toggleFlag}
               onSaveEdit={saveEdit}
+              onEditBlocked={signInToEdit ? () => setModal("signin") : undefined}
             />
           </div>
 
@@ -338,6 +342,7 @@ export function CardsMode({ openDeck, firstName }: CardsModeProps = {}) {
           }}
         />
       )}
+      {modal === "signin" && <SignInModal deck={subject} onClose={closeSettings} />}
       {modal === "settings" && (
         <SettingsModal onClose={closeSettings} onRestart={restart} />
       )}

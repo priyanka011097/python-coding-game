@@ -61,8 +61,7 @@ export function buildApi(env: Env, root: string): Connect.NextHandleFunction[] {
       apiKey: env.NVIDIA_API_KEY,
       model: env.NVIDIA_MODEL,
       thinking: env.NVIDIA_THINKING,
-      // Until Google sign-in is configured, the app stays open.
-      isSignedIn: authConfigured ? (req) => sessions.read(req) !== null : undefined,
+      // Open to everyone, signed in or not: the app works without an account.
     }),
   ];
 }

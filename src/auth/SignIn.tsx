@@ -1,9 +1,9 @@
 /* =====================================================================
-   SignIn.tsx — the landing page everyone sees before signing in.
+   SignIn.tsx — the landing page new visitors see first.
 
    Explains what the product is (three ways to practise, one dashboard)
-   and offers one action: Continue with Google, which both signs up new
-   people and logs existing ones in.
+   and offers one action: Start practising, which opens the app with no
+   account needed. "Sign in" (top right) is there for syncing progress.
    ===================================================================== */
 
 import { ThemeToggle } from "../theme/ThemeToggle";
@@ -12,22 +12,14 @@ import { AdLayout } from "../ads/AdLayout";
 import { SiteFooter } from "../info/InfoPages";
 import { BRAND, BRAND_MARK } from "../brand";
 import { slugOf } from "../cards/slug";
+import { signInUrl } from "./GoogleButton";
 import "./landing.css";
 
 interface SignInProps {
   error: string | null;
   callbackUrl: string;
-}
-
-function GoogleLogo() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
-      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
-    </svg>
-  );
+  /** Opens the app. Without it (pre-rendered HTML) the button is a link. */
+  onStart?: () => void;
 }
 
 /** Any address other than localhost: Google will refuse it (an https://
@@ -40,14 +32,22 @@ const wrongHost =
 
 /** Come back to the page you asked for (e.g. /admin) after signing in. */
 const here = IN_BROWSER ? window.location.pathname : "/";
-const signInHref = here && here !== "/" ? `/auth/google?next=${encodeURIComponent(here)}` : "/auth/google";
+const signInHref = signInUrl(here);
 
-function GoogleButton({ size = "lg" }: { size?: "lg" | "sm" }) {
-  // A plain link, not fetch: the browser must follow Google's redirects.
+/** The main call to action: into the app, no account needed. A link to
+ *  /?start too, so it works before (or without) JavaScript. */
+function StartButton({ onStart }: { onStart?: () => void }) {
   return (
-    <a className={`google-btn google-btn--${size}`} href={signInHref}>
-      <GoogleLogo />
-      Continue with Google
+    <a
+      className="lp-start"
+      href="/?start"
+      onClick={(e) => {
+        if (!onStart) return;
+        e.preventDefault();
+        onStart();
+      }}
+    >
+      Start practising
     </a>
   );
 }
@@ -77,7 +77,7 @@ const EXTRAS = [
   ["📊", "One dashboard", "See progress in every section and topic at a glance, and jump straight back in."],
   ["🎯", "Readiness score", "Know when you are interview-ready: it rewards acing hard questions in every topic."],
   ["🔊", "Listen and speak", "Hear questions read aloud and answer by voice instead of typing."],
-  ["☁️", "Saved to your account", "Pick up on any device. Progress syncs when you sign in."],
+  ["☁️", "No account needed", "Start straight away. Sign in with Google when you want your progress on every device."],
   ["🧩", "Choose your topics", "Focus on the decks and languages your next interview is about."],
   ["🦆", "A duck that cheers", "Small wins add up, and a duck pops in to celebrate them."],
 ] as const;
@@ -118,7 +118,7 @@ const FAQ = [
   ],
   [
     "Do I need an account?",
-    "You can browse the first cards of every Study Cards deck without one. Sign in with Google to practise everything and save your progress to your account, so you can pick up on any device.",
+    "No. Everything works without one, and your progress is kept in your browser. Sign in with Google when you want to write your own answers on cards or keep your progress across devices.",
   ],
   [
     "Does it work on my phone?",
@@ -167,7 +167,7 @@ function QuestionPreview() {
   );
 }
 
-export function SignIn({ error, callbackUrl }: SignInProps) {
+export function SignIn({ error, callbackUrl, onStart }: SignInProps) {
   return (
     <div className="lp">
       <header className="lp-nav">
@@ -208,8 +208,8 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
             )}
 
             <div className="lp-cta">
-              <GoogleButton />
-              <span className="lp-cta__hint">New here? Signing in creates your account.</span>
+              <StartButton onStart={onStart} />
+              <span className="lp-cta__hint">No sign-up needed. Jump straight in.</span>
             </div>
 
             {error && (
@@ -273,8 +273,8 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
             <li>
               <span className="lp-step__n">1</span>
               <div>
-                <h3>Sign in with Google</h3>
-                <p>No forms or passwords. Your account is created the first time.</p>
+                <h3>Start practising</h3>
+                <p>No sign-up or forms. Open the app and answer your first question in seconds.</p>
               </div>
             </li>
             <li>
@@ -288,7 +288,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
               <span className="lp-step__n">3</span>
               <div>
                 <h3>Practise, then check your readiness</h3>
-                <p>Questions step up from simple to hard. Your dashboard shows what is solid and what to work on.</p>
+                <p>Questions step up from simple to hard. Your dashboard shows what is solid and what to work on. Sign in any time to keep it on every device.</p>
               </div>
             </li>
           </ol>
@@ -324,7 +324,7 @@ export function SignIn({ error, callbackUrl }: SignInProps) {
 
         <section className="lp-final" data-duck-big="Quack! Let's go!">
           <h2 className="lp-h2">Your next interview starts with one question.</h2>
-          <GoogleButton />
+          <StartButton onStart={onStart} />
         </section>
       </main>
       </AdLayout>
